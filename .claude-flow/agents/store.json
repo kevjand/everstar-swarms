@@ -1,0 +1,19 @@
+{
+  "agents": {
+    "agent-1775182147987-fgtomc": {
+      "agentId": "agent-1775182147987-fgtomc",
+      "agentType": "researcher",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "provider": "anthropic",
+        "task": "test task"
+      },
+      "createdAt": "2026-04-03T02:09:07.989Z",
+      "model": "haiku",
+      "modelRoutedBy": "router"
+    }
+  },
+  "version": "3.0.0"
+}
