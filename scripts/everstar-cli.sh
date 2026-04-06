@@ -500,7 +500,7 @@ ALL AGENTS MUST:
       - Type: tester
       - Name: behavioral-tester
       - Description: Behavioral testing
-      - Prompt: \"CRITICAL - Read LINEAR TICKET at /tmp/linear-ticket-$TICKET_ID.json to understand acceptance criteria. Read $WORKTREE_PATH/CLAUDE.md for testing conventions. Write tests that verify ACCEPTANCE CRITERIA and USER BEHAVIOR (not implementation details). Focus on: Does the feature actually work? Include: integration tests (70%), unit tests (20%), edge cases. RUN ONLY THE TESTS YOU CREATE: npm test -- path/to/your-new-test-file.test.tsx (NOT npm test or npm test -- .). If YOUR tests fail, FIX them. Only complete when YOUR NEW tests PASS. Test behavior not structure (GOOD: clicking keeps sidebar expanded. BAD: has icon property). DO NOT create .md documentation files (Test Summary, etc.) - only create test code files (.test.ts, .test.tsx, .spec.ts, test_*.py, etc.). DO NOT modify existing test infrastructure (setup.js, jest.config.js, vitest.config.js, jest.setup.js, etc.) - use existing test setup as-is. Only create NEW test files. Working directory: $WORKTREE_PATH\"
+      - Prompt: \"CRITICAL - Read LINEAR TICKET at /tmp/linear-ticket-$TICKET_ID.json to understand acceptance criteria. Read $WORKTREE_PATH/CLAUDE.md for testing conventions. Write tests that verify ACCEPTANCE CRITERIA and USER BEHAVIOR (not implementation details). Focus on: Does the feature actually work? Include: integration tests (70%), unit tests (20%), edge cases. TESTING WORKFLOW: (1) Create new test files, (2) Run your new tests: npm test -- path/to/your-new-test-file.test.tsx, (3) Fix your new tests if they fail, (4) FINAL CHECK: Run npm test (NO extra flags - matches CI/CD) to ensure implementation didn't break existing tests, (5) If existing tests fail, report the issue - implementation is broken. Test behavior not structure (GOOD: clicking keeps sidebar expanded. BAD: has icon property). DO NOT create .md documentation files (Test Summary, etc.) - only create test code files (.test.ts, .test.tsx, .spec.ts, test_*.py, etc.). DO NOT modify existing test infrastructure (setup.js, jest.config.js, vitest.config.js, jest.setup.js, etc.) - use existing test setup as-is. DO NOT mark tests as .skip - all new tests must run. Respect existing .skip tests - they are intentional. Only create NEW test files. Working directory: $WORKTREE_PATH\"
 
    4. Security Scanner
       - Type: security-auditor
@@ -574,13 +574,21 @@ ALL AGENTS MUST:
       - EXISTING skipped tests (already in codebase before automation): OK (intentional)
       - NEW skipped tests (added by tester agent): NOT OK (incomplete work)
       - If tester added new skipped tests: STOP and report \"Tester added skipped tests - all new tests must be runnable\"
-   Step 4: RUN ONLY THE NEW TESTS and ensure they PASS:
-      - Identify which test files were CREATED (check git status --short for new files)
-      - Run ONLY the new test files: npm test -- path/to/new-test.test.tsx (NOT npm test or npm test -- .)
-      - Run: pytest path/to/new_test.py (if backend test files created)
-      - If ANY new test fails: STOP, report failures, DO NOT create PR
-      - If tests pass but don't verify acceptance criteria: STOP, report issue
-      - DO NOT run existing tests from the codebase - only run tests created by the tester agent
+   Step 4: RUN ALL TESTS to ensure nothing is broken:
+      CRITICAL: Implementation changes can break existing tests, so we MUST run all tests EXACTLY as CI/CD does.
+
+      - First, identify which test files were CREATED (check git status --short for new files)
+      - Run tests EXACTLY as CI/CD does:
+        Frontend: npm test (no extra flags - uses default jest/vitest config)
+        Backend: pytest (no extra flags - uses default pytest config)
+      - Tests marked .skip or .todo are INTENTIONAL - do NOT try to run them or remove them
+      - If ANY non-skipped test fails (new OR existing): STOP, report failures, investigate what broke, DO NOT create PR
+      - Review new test output specifically: verify new tests cover acceptance criteria
+      - If tests pass but new tests don't verify acceptance criteria: STOP, report issue
+
+      Why run all tests: Code changes can break existing functionality. A passing new test but failing existing test means the implementation is broken.
+
+      IMPORTANT: Use default test commands (npm test, pytest) with NO extra parameters. This matches CI/CD behavior exactly.
    Step 5: Run other quality gates (only after tests pass):
       - Linting: ruff (Python), npm lint (TypeScript)
       - Verify no TODO/FIXME comments
@@ -625,11 +633,15 @@ ALL AGENTS MUST:
    - CLEAR CHECKPOINT: Mark as fully complete using Bash: source $SCRIPT_DIR/checkpoint.sh && checkpoint_clear
 
    BLOCKING RULES - DO NOT CREATE PR IF:
-   1. Tests fail (any test failures)
-   2. Tests don't verify acceptance criteria (structural tests only)
+   1. ANY tests fail (new tests OR existing tests) - Must run npm test and pytest to verify
+   2. New tests don't verify acceptance criteria (structural tests only)
    3. Acceptance criteria not covered by tests (missing test coverage)
+   4. Code changes broke existing tests (regression)
 
-   ONLY CREATE PR if: Tests pass AND tests prove acceptance criteria are met
+   ONLY CREATE PR if:
+   - ALL tests pass (run npm test and pytest, not just new tests)
+   - New tests prove acceptance criteria are met
+   - No regressions in existing functionality
 
 7. Your role as orchestrator using Ruflo MCP:
    - Step 5: Spawn 5 implementation agents in ONE message using mcp__claude-flow__agent_spawn (6 tool calls total: 1 ToolSearch + 5 spawns)
