@@ -1,6 +1,24 @@
 #!/bin/bash
-# Everstar CLI - Send prompt directly to Claude CLI
-# Usage: ./everstar-cli.sh ENG-XXXX [USER_PREFIX] [--interactive] [--resume]
+# Everstar CLI - Automated ticket execution with AI agents
+# Usage: ./everstar-cli.sh ENG-XXXX [USER_PREFIX] [OPTIONS]
+#
+# Options:
+#   --interactive, -i     Pause between phases for user approval
+#   --resume, -r          Resume from checkpoint
+#   --mode=MODE           Execution mode: "simple" (default) or "swarm"
+#   --simple              Use simple mode (Claude Code native agents - RECOMMENDED)
+#   --swarm               Use swarm mode (Ruflo MCP coordination - EXPERIMENTAL)
+#
+# Examples:
+#   ./everstar-cli.sh ENG-5000              # Simple mode, auto-detect user
+#   ./everstar-cli.sh ENG-5000 kevjand     # Simple mode, specific user
+#   ./everstar-cli.sh ENG-5000 --interactive  # Pause between phases
+#   ./everstar-cli.sh ENG-5000 --swarm      # Use Ruflo swarm (experimental)
+#
+# Modes:
+#   simple: Sequential execution with Claude Code native agents (default, working now)
+#   swarm:  Parallel execution with Ruflo MCP coordination (advanced, experimental)
+#
 # Requires: claude CLI running or will start it
 
 set -e
@@ -17,6 +35,7 @@ source "$SCRIPT_DIR/checkpoint.sh"
 # Parse arguments
 INTERACTIVE_MODE=false
 RESUME_MODE=false
+EXECUTION_MODE="simple"  # Default to simple mode (working now)
 TICKET_ID=""
 CLI_USER_PREFIX=""  # Store CLI arg separately to not override .env
 
@@ -30,6 +49,18 @@ for arg in "$@"; do
             RESUME_MODE=true
             shift
             ;;
+        --mode=*)
+            EXECUTION_MODE="${arg#*=}"
+            shift
+            ;;
+        --simple)
+            EXECUTION_MODE="simple"
+            shift
+            ;;
+        --swarm)
+            EXECUTION_MODE="swarm"
+            shift
+            ;;
         *)
             if [ -z "$TICKET_ID" ]; then
                 TICKET_ID=$arg
@@ -39,6 +70,12 @@ for arg in "$@"; do
             ;;
     esac
 done
+
+# Validate execution mode
+if [[ "$EXECUTION_MODE" != "simple" && "$EXECUTION_MODE" != "swarm" ]]; then
+    echo "ERROR: Invalid execution mode '$EXECUTION_MODE'. Must be 'simple' or 'swarm'"
+    exit 1
+fi
 
 # Set USER_PREFIX with proper precedence: CLI arg > .env > "auto"
 if [ -n "$CLI_USER_PREFIX" ]; then
@@ -149,28 +186,32 @@ cd "$WORKTREE_PATH"
 echo "OK Worktree: $WORKTREE_PATH"
 echo "OK Branch: $BRANCH"
 
-# 3. Initialize swarm
-npx @claude-flow/cli@latest swarm init --topology hierarchical --max-agents 8 > /dev/null 2>&1
-echo "OK Swarm initialized"
+# 3. Initialize Ruflo swarm (conditional based on mode)
+if [ "$EXECUTION_MODE" = "swarm" ]; then
+    echo "OK Initializing Ruflo swarm (SWARM MODE)..."
+    npx @claude-flow/cli@latest swarm init --topology hierarchical --max-agents 8 --strategy specialized > /tmp/ruflo-swarm-init.log 2>&1
+    if [ $? -eq 0 ]; then
+        echo "OK Ruflo swarm ready"
+        SWARM_STATUS="READY"
+    else
+        echo "WARN Swarm init failed, falling back to simple mode"
+        EXECUTION_MODE="simple"
+        SWARM_STATUS="DISABLED (fallback)"
+    fi
+else
+    echo "OK Using simple mode (sequential Claude Code agents)"
+    SWARM_STATUS="DISABLED (simple mode)"
+fi
 
-# 4. Initialize hive-mind
-echo "OK Initializing hive-mind..."
-npx @claude-flow/cli@latest hive-mind init \
-  --objective "Implement Linear ticket $TICKET_ID" \
-  --workers 6 \
-  --consensus byzantine \
-  --topology hierarchical-mesh > /dev/null 2>&1
-echo "OK Hive-mind initialized"
-
-# 5. Create prompt for Claude Code to execute within Ruflo framework
+# 5. Create prompt for Claude Code to execute
 echo "OK Preparing execution..."
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  Worktree: $WORKTREE_PATH"
 echo "  Branch: $BRANCH"
 echo "  Ticket: $TICKET_ID"
-echo "  Ruflo Swarm: READY"
-echo "  Hive-Mind: INITIALIZED"
+echo "  Execution Mode: $EXECUTION_MODE"
+echo "  Ruflo Swarm: $SWARM_STATUS"
 if [ "$INTERACTIVE_MODE" = true ]; then
     echo "  Mode: INTERACTIVE (approval required between phases)"
 else
@@ -179,6 +220,46 @@ fi
 echo "  Agent Timeouts: 15 minutes per agent"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
+
+# Create execution mode instructions
+EXECUTION_MODE_INSTRUCTIONS=""
+if [ "$EXECUTION_MODE" = "swarm" ]; then
+    EXECUTION_MODE_INSTRUCTIONS="
+EXECUTION MODE: RUFLO SWARM (Advanced)
+
+Use Ruflo MCP tools for true parallel multi-agent coordination:
+1. FIRST: Load Ruflo MCP tools using ToolSearch
+2. THEN: Spawn agents using mcp__claude-flow__agent_spawn
+3. Agents coordinate via Ruflo message-bus and shared memory namespace
+4. Support true parallel execution with Byzantine consensus
+
+Agent spawning syntax:
+ToolSearch(query: \"select:mcp__claude-flow__agent_spawn\")
+mcp__claude-flow__agent_spawn(
+    type: \"agent-type\",
+    name: \"agent-name\",
+    prompt: \"detailed instructions\"
+)
+"
+else
+    EXECUTION_MODE_INSTRUCTIONS="
+EXECUTION MODE: SIMPLE (Recommended - Working Now)
+
+Use Claude Code's native Agent tool for sequential coordination:
+1. Spawn agents using Agent() tool directly
+2. Agents coordinate via shared filesystem and git worktree
+3. Sequential phase execution with file-based handoffs
+4. Proven reliable, fast, and simple
+
+Agent spawning syntax:
+Agent(
+    subagent_type: \"agent-type\",
+    description: \"Short description\",
+    prompt: \"detailed instructions\",
+    run_in_background: true
+)
+"
+fi
 
 # Create interactive mode instructions
 INTERACTIVE_INSTRUCTIONS=""
@@ -210,9 +291,9 @@ PROMPT="RUFLO TICKET EXECUTION BOT - $TICKET_ID
 
 Worktree: $WORKTREE_PATH
 Branch: $BRANCH
-Ruflo Swarm: INITIALIZED (hierarchical, 8 agents max)
-Hive-Mind: READY (Byzantine consensus, hierarchical-mesh)
+Ruflo Swarm: $SWARM_STATUS
 $INTERACTIVE_INSTRUCTIONS
+$EXECUTION_MODE_INSTRUCTIONS
 
 TASK: Execute ticket $TICKET_ID using 4-PHASE approach with ticket enrichment and automated plan validation.
 
@@ -245,8 +326,15 @@ ALL AGENTS MUST:
 
    CRITICAL: Linear API key is REQUIRED. If \$LINEAR_API_KEY is empty or request fails, exit with error.
 
-2. Spawn ticket-analyzer agent (run_in_background: true):
-   Agent(subagent_type: reviewer, run_in_background: true)
+2. Spawn ticket-analyzer agent using syntax from EXECUTION MODE above:
+   - For simple mode: Use Agent() tool
+   - For swarm mode: Use ToolSearch + mcp__claude-flow__agent_spawn
+
+   Agent configuration:
+   - Type: reviewer
+   - Name: ticket-analyzer
+   - Description: Analyze ticket quality
+   - Prompt: \"Analyze ticket $TICKET_ID quality and generate enrichment if score < 70. Read /tmp/linear-ticket-$TICKET_ID.json for ticket data. Write enriched ticket to /tmp/ruflo-ticket-enriched-$TICKET_ID.md if needed, else write 'ORIGINAL_TICKET_OK' to /tmp/ruflo-ticket-status-$TICKET_ID.txt\"
 
    AFTER SPAWNING: Report status
    \"Ticket analyzer agent spawned - analyzing ticket quality and generating enrichment if needed. This typically takes 30-90 seconds...\"
@@ -311,8 +399,15 @@ ALL AGENTS MUST:
 
 ==== PHASE 1: PLANNING ====
 
-3. Spawn planner agent (run_in_background: true):
-   Agent(subagent_type: planner, run_in_background: true)
+3. Spawn planner agent using syntax from EXECUTION MODE above:
+   - For simple mode: Use Agent() tool
+   - For swarm mode: Use ToolSearch + mcp__claude-flow__agent_spawn
+
+   Agent configuration:
+   - Type: planner
+   - Name: planner
+   - Description: Create implementation plan
+   - Prompt: \"Create implementation plan for ticket $TICKET_ID. Read ticket from /tmp/ruflo-ticket-enriched-$TICKET_ID.md (or /tmp/linear-ticket-$TICKET_ID.json if no enrichment). Read $WORKTREE_PATH/CLAUDE.md for project conventions. Write plan to /tmp/ruflo-plan-$TICKET_ID.md\"
 
    AFTER SPAWNING: Report status
    \"Planner agent spawned - analyzing requirements and creating implementation plan. This typically takes 2-4 minutes depending on complexity...\"
@@ -346,8 +441,15 @@ ALL AGENTS MUST:
 
 ==== PHASE 2: AUTOMATED PLAN REVIEW ====
 
-4. Spawn plan-reviewer agent (run_in_background: true):
-   Agent(subagent_type: reviewer, run_in_background: true)
+4. Spawn plan-reviewer agent using syntax from EXECUTION MODE above:
+   - For simple mode: Use Agent() tool
+   - For swarm mode: Use ToolSearch + mcp__claude-flow__agent_spawn
+
+   Agent configuration:
+   - Type: reviewer
+   - Name: plan-reviewer
+   - Description: Review implementation plan
+   - Prompt: \"Review plan at /tmp/ruflo-plan-$TICKET_ID.md for quality, completeness, and alignment with ticket requirements. Write review results to /tmp/ruflo-plan-review-$TICKET_ID.md. End with 'PLAN APPROVED' or 'PLAN REJECTED'\"
 
    AFTER SPAWNING: Report status
    \"Plan reviewer agent spawned - validating plan against quality standards. This typically takes 1-2 minutes...\"
@@ -372,25 +474,53 @@ ALL AGENTS MUST:
 
 ==== PHASE 3: EXECUTION (AFTER AUTOMATED APPROVAL) ====
 
-5. After plan-reviewer approval, spawn 5 implementation agents in ONE message (run_in_background: true):
+5. After plan-reviewer approval, spawn 5 implementation agents in ONE message:
 
-   AGENT TIMEOUT PROTECTION: Each agent has a 15-minute timeout. If any agent times out, it will be automatically retried once.
+   AGENT TIMEOUT PROTECTION: Each agent has a 15-minute timeout.
 
-   ALL AGENTS MUST FIRST: Read $WORKTREE_PATH/CLAUDE.md and follow ALL project-specific rules
+   Spawn ALL 5 agents in ONE message using syntax from EXECUTION MODE above:
+   - For simple mode: Use Agent() tool with run_in_background: true
+   - For swarm mode: Use ToolSearch + mcp__claude-flow__agent_spawn (for true parallel execution)
 
-   - coder (backend): [TIMEOUT: 15min] Read CLAUDE.md first, then implement backend per plan (Python/FastAPI, TDD, full type hints, follow project structure from CLAUDE.md)
-   - coder (frontend): [TIMEOUT: 15min] Read CLAUDE.md first, then implement frontend per plan (TypeScript/React, component-based, follow project structure from CLAUDE.md)
-   - tester: [TIMEOUT: 15min] CRITICAL - Read LINEAR TICKET first to understand acceptance criteria. Read CLAUDE.md for testing conventions. Write tests that verify ACCEPTANCE CRITERIA and USER BEHAVIOR (not implementation details). Focus on: Does the feature actually work? Include: integration tests (70%), unit tests (20%), edge cases. RUN all tests immediately: npm test -- [test-files]. If tests fail, FIX them. Only complete when all tests PASS. Test behavior not structure (GOOD: clicking keeps sidebar expanded. BAD: has icon property)
-   - security-auditor: [TIMEOUT: 15min] Vulnerability scan, input validation, no secrets, check against CLAUDE.md security rules
-   - reviewer: [TIMEOUT: 15min] Read LINEAR TICKET to understand requirements. Verify CLAUDE.md compliance. Review implementation: Does it actually solve the ticket requirement? Review tests: Do they verify acceptance criteria and user behavior? Check RED FLAGS: tests only check structure not behavior, implementation looks incomplete, acceptance criteria not addressed. Report PASS or FAIL with specific issues to fix
+   Agent configurations for Phase 3:
+
+   1. Backend Coder
+      - Type: coder
+      - Name: backend-coder
+      - Description: Backend implementation
+      - Prompt: \"Read $WORKTREE_PATH/CLAUDE.md first. Implement backend per plan at /tmp/ruflo-plan-$TICKET_ID.md. Python/FastAPI, TDD, full type hints, follow project structure from CLAUDE.md. Working directory: $WORKTREE_PATH\"
+
+   2. Frontend Coder
+      - Type: coder
+      - Name: frontend-coder
+      - Description: Frontend implementation
+      - Prompt: \"Read $WORKTREE_PATH/CLAUDE.md first. Implement frontend per plan at /tmp/ruflo-plan-$TICKET_ID.md. TypeScript/React, component-based, follow project structure from CLAUDE.md. Working directory: $WORKTREE_PATH\"
+
+   3. Behavioral Tester
+      - Type: tester
+      - Name: behavioral-tester
+      - Description: Behavioral testing
+      - Prompt: \"CRITICAL - Read LINEAR TICKET at /tmp/linear-ticket-$TICKET_ID.json to understand acceptance criteria. Read $WORKTREE_PATH/CLAUDE.md for testing conventions. Write tests that verify ACCEPTANCE CRITERIA and USER BEHAVIOR (not implementation details). Focus on: Does the feature actually work? Include: integration tests (70%), unit tests (20%), edge cases. RUN ONLY THE TESTS YOU CREATE: npm test -- path/to/your-new-test-file.test.tsx (NOT npm test or npm test -- .). If YOUR tests fail, FIX them. Only complete when YOUR NEW tests PASS. Test behavior not structure (GOOD: clicking keeps sidebar expanded. BAD: has icon property). DO NOT create .md documentation files (Test Summary, etc.) - only create test code files (.test.ts, .test.tsx, .spec.ts, test_*.py, etc.). DO NOT modify existing test infrastructure (setup.js, jest.config.js, vitest.config.js, jest.setup.js, etc.) - use existing test setup as-is. Only create NEW test files. Working directory: $WORKTREE_PATH\"
+
+   4. Security Scanner
+      - Type: security-auditor
+      - Name: security-scanner
+      - Description: Security scan
+      - Prompt: \"Vulnerability scan, input validation, no secrets, check against $WORKTREE_PATH/CLAUDE.md security rules. Write findings to /tmp/ruflo-security-$TICKET_ID.md. Working directory: $WORKTREE_PATH\"
+
+   5. Code Reviewer
+      - Type: reviewer
+      - Name: code-reviewer
+      - Description: Code review
+      - Prompt: \"Read LINEAR TICKET at /tmp/linear-ticket-$TICKET_ID.json to understand requirements. Verify $WORKTREE_PATH/CLAUDE.md compliance. Review implementation: Does it actually solve the ticket requirement? Review tests: Do they verify acceptance criteria and user behavior? Check RED FLAGS: tests only check structure not behavior, implementation looks incomplete, acceptance criteria not addressed. Write review to /tmp/ruflo-review-$TICKET_ID.md with PASS or FAIL. Working directory: $WORKTREE_PATH\"
 
    IMMEDIATELY AFTER SPAWNING ALL 5: Report status
-   \"Phase 3 execution started - all 5 implementation agents launched in parallel:
-   1. Backend coder - Implementing backend changes per plan
-   2. Frontend coder - Implementing frontend changes per plan
-   3. Tester - Writing and running behavioral tests (verify acceptance criteria)
-   4. Security auditor - Security scan and vulnerability check
-   5. Reviewer - Code review and quality gates
+   \"Phase 3 execution started - all 5 implementation agents launched in parallel via Ruflo:
+   1. backend-coder - Implementing backend changes per plan
+   2. frontend-coder - Implementing frontend changes per plan
+   3. behavioral-tester - Writing and running behavioral tests (verify acceptance criteria)
+   4. security-scanner - Security scan and vulnerability check
+   5. code-reviewer - Code review and quality gates
 
    Estimated time: 5-10 minutes for all agents to complete. You'll receive notifications as each finishes...\"
 
@@ -413,29 +543,54 @@ ALL AGENTS MUST:
 
    This keeps user informed that automation is actively running.
 
-5c. AFTER ALL 5 AGENTS COMPLETE, spawn pr-manager agent (run_in_background: true):
-   - pr-manager: Review all agent outputs, run quality gates, commit changes, push to remote, create PR with comprehensive description
+5c. AFTER ALL 5 AGENTS COMPLETE, spawn pr-manager agent using syntax from EXECUTION MODE above:
+   - For simple mode: Use Agent() tool
+   - For swarm mode: Use ToolSearch + mcp__claude-flow__agent_spawn
+
+   Agent configuration:
+   - Type: reviewer
+   - Name: pr-manager
+   - Description: PR creation and quality gates
+   - Prompt: \"Review all agent outputs, run quality gates, commit changes, push to remote, create PR. Read instructions in section 6 below. Working directory: $WORKTREE_PATH\"
+     )
 
 6. The pr-manager agent instructions (spawned AFTER the 5 agents complete):
 
    CRITICAL: DO NOT CREATE PR UNLESS TESTS VERIFY ACCEPTANCE CRITERIA
 
    Step 1: Read acceptance criteria from ticket/enrichment - THIS is what needs to work
-   Step 2: Review test files - do they ACTUALLY test the acceptance criteria?
-      - Each acceptance criterion MUST have corresponding behavioral test
-      - GOOD: test \"clicking Schematics keeps sidebar expanded\" (tests AC)
+   Step 2: Review test files - do they ACTUALLY test ALL acceptance criteria?
+      - LIST every acceptance criterion from the ticket
+      - For EACH criterion, identify which test(s) verify it
+      - Each acceptance criterion MUST have corresponding behavioral test(s)
+      - GOOD: test \"clicking Schematics keeps sidebar expanded\" (directly tests AC)
       - BAD: test \"schematicsEntry has icon property\" (structural, not AC)
+      - If ANY acceptance criterion is missing test coverage: FAIL and report \"Missing test coverage for AC: [criterion]\"
       - If tests check structure not behavior: FAIL and report \"Tests do not verify acceptance criteria\"
-   Step 3: RUN ALL TESTS and ensure they PASS:
-      - Run: npm test -- [new test files]
-      - Run: pytest [new test files] (if backend changes)
-      - If ANY test fails: STOP, report failures, DO NOT create PR
+      - EVERY AC must be proven by a passing test
+   Step 3: Check for NEW skipped tests (DO NOT allow tester to add skipped tests):
+      - Check git diff for new test files that were created
+      - If new test files contain .skip or test.skip() or describe.skip(): Check if these are NEW
+      - EXISTING skipped tests (already in codebase before automation): OK (intentional)
+      - NEW skipped tests (added by tester agent): NOT OK (incomplete work)
+      - If tester added new skipped tests: STOP and report \"Tester added skipped tests - all new tests must be runnable\"
+   Step 4: RUN ONLY THE NEW TESTS and ensure they PASS:
+      - Identify which test files were CREATED (check git status --short for new files)
+      - Run ONLY the new test files: npm test -- path/to/new-test.test.tsx (NOT npm test or npm test -- .)
+      - Run: pytest path/to/new_test.py (if backend test files created)
+      - If ANY new test fails: STOP, report failures, DO NOT create PR
       - If tests pass but don't verify acceptance criteria: STOP, report issue
-   Step 4: Run other quality gates (only after tests pass):
+      - DO NOT run existing tests from the codebase - only run tests created by the tester agent
+   Step 5: Run other quality gates (only after tests pass):
       - Linting: ruff (Python), npm lint (TypeScript)
       - Verify no TODO/FIXME comments
       - Check security findings (critical vs follow-up)
-   Step 5: ONLY if all tests pass and quality gates pass:
+   Step 6: Remove unwanted files before commit:
+      - Delete any .md documentation files created by agents (Test Summary, IMPLEMENTATION.md, CHANGES.md, etc.)
+      - Run: find $WORKTREE_PATH -name \"*Test Summary*.md\" -o -name \"IMPLEMENTATION.md\" -o -name \"CHANGES.md\" | xargs rm -f
+      - ONLY commit: source code, tests, and configuration files
+      - DO NOT commit: documentation, summaries, or markdown files (unless explicitly part of the ticket)
+   Step 7: ONLY if all tests pass and quality gates pass:
       - Stage all changes: git add -A
       - Create commit: eng-XXXX: [description] with Co-Authored-By: claude-flow
       - Push to remote: git push origin $BRANCH
@@ -476,13 +631,15 @@ ALL AGENTS MUST:
 
    ONLY CREATE PR if: Tests pass AND tests prove acceptance criteria are met
 
-7. Your role as orchestrator:
-   - Step 5: Spawn 5 implementation agents in ONE message (all with run_in_background: true)
-   - Step 5b: WAIT for ALL 5 to complete (you'll receive notifications)
-   - Step 5c: After all 5 finish, spawn pr-manager agent
+7. Your role as orchestrator using Ruflo MCP:
+   - Step 5: Spawn 5 implementation agents in ONE message using mcp__claude-flow__agent_spawn (6 tool calls total: 1 ToolSearch + 5 spawns)
+   - Step 5b: Use mcp__claude-flow__swarm_status to check agent completion status
+   - Step 5c: After all 5 finish, spawn pr-manager agent (2 tool calls: 1 ToolSearch + 1 spawn)
    - Do NOT manually run quality gates, commits, or create PRs - let pr-manager handle everything
 
-FORBIDDEN: Do NOT create implementation markdown files (e.g., IMPLEMENTATION.md, CHANGES.md). The code, tests, and commit messages are the documentation.
+   IMPORTANT: All agent spawns go through Ruflo MCP, not Claude Code's Agent tool. This enables proper swarm coordination.
+
+FORBIDDEN: Do NOT create ANY markdown documentation files (IMPLEMENTATION.md, CHANGES.md, Test Summary.md, etc.). The code, tests, and commit messages are the documentation. Only commit source code, tests, and configuration files.
 
 WORKFLOW PHASES:
 - Phase 0: Ticket analysis & conditional enrichment (score < 70)

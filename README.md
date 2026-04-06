@@ -1,6 +1,8 @@
 # Everstar Automated Ticket Execution
 
-Autonomous ticket-to-PR workflow using Ruflo multi-agent orchestration.
+Autonomous ticket-to-PR workflow using multi-agent orchestration with two execution modes:
+- **Simple Mode** (default): Claude Code native agents, sequential execution, production-ready
+- **Swarm Mode** (experimental): Ruflo MCP coordination, parallel execution, under development
 
 ## What This Does
 
@@ -8,6 +10,7 @@ Transforms Linear tickets into fully implemented, tested, and reviewed pull requ
 
 **Input:** Linear ticket ID (e.g., ENG-4590)
 **Output:** Complete PR with implementation, tests, and quality gates passed
+**Mode:** Simple (default) or Swarm (experimental)
 
 ## Quick Start
 
@@ -41,6 +44,7 @@ The setup script will:
 
 ### 2. Run Automation
 
+**Basic usage (Simple mode - recommended):**
 ```bash
 ./scripts/everstar-cli.sh ENG-XXXX
 ```
@@ -50,7 +54,84 @@ Or with URL:
 ./scripts/everstar-cli.sh https://linear.app/everstar/issue/ENG-XXXX
 ```
 
-### 3. What Happens Automatically
+**Advanced options:**
+```bash
+# Interactive mode - pause between phases for approval
+./scripts/everstar-cli.sh ENG-XXXX --interactive
+
+# Specify user prefix for branch name
+./scripts/everstar-cli.sh ENG-XXXX kevjand
+
+# Use Ruflo swarm mode (experimental)
+./scripts/everstar-cli.sh ENG-XXXX --swarm
+
+# Resume from checkpoint
+./scripts/everstar-cli.sh ENG-XXXX --resume
+```
+
+### 3. Execution Modes
+
+The automation supports two execution modes:
+
+#### Simple Mode (Default - Recommended)
+
+**Use this by default** - proven reliable and fast
+
+```bash
+./scripts/everstar-cli.sh ENG-XXXX
+# or explicitly:
+./scripts/everstar-cli.sh ENG-XXXX --simple
+```
+
+**How it works:**
+- Uses Claude Code's native `Agent()` tool
+- Sequential phase execution (0 → 1 → 2 → 3)
+- File-based coordination via shared worktree
+- Agents communicate through temp files in `/tmp/ruflo-*.md`
+- **Status:** Production-ready, working now
+
+**Best for:**
+- Day-to-day ticket execution
+- Reliable, predictable behavior
+- Quick setup and execution
+
+#### Swarm Mode (Experimental)
+
+**Advanced mode** - for future development
+
+```bash
+./scripts/everstar-cli.sh ENG-XXXX --swarm
+```
+
+**How it works:**
+- Uses Ruflo MCP tools (`mcp__claude-flow__agent_spawn`)
+- True parallel agent execution
+- Message-bus coordination with Byzantine consensus
+- Shared memory namespace for cross-agent communication
+- Hierarchical-mesh topology (8 agents max)
+- **Status:** Experimental, under development
+
+**Best for:**
+- Testing advanced swarm features
+- Developing new coordination patterns
+- Experimenting with parallel execution
+
+**Note:** If swarm init fails, automatically falls back to simple mode.
+
+#### Mode Comparison
+
+| Feature | Simple Mode | Swarm Mode |
+|---------|-------------|------------|
+| **Execution** | Sequential phases | True parallel agents |
+| **Coordination** | File-based (temp files) | Message-bus + shared memory |
+| **Agent Tool** | `Agent()` native | `mcp__claude-flow__agent_spawn` |
+| **Speed** | Fast (proven) | Faster (parallel) - when working |
+| **Reliability** | Production-ready | Experimental |
+| **Use Case** | Day-to-day automation | Testing, development |
+| **Fallback** | N/A | Falls back to simple if init fails |
+| **Status Display** | "DISABLED (simple mode)" | "READY" or "DISABLED (fallback)" |
+
+### 4. What Happens Automatically
 
 **Phase 0: Ticket Analysis & Enrichment**
 - Fetches ticket from Linear via MCP
@@ -252,10 +333,31 @@ swarm-exp/
 
 ## Common Commands
 
+### Automation Commands
+
 ```bash
-# Run automation on ticket
+# Run automation (simple mode - default)
 ./scripts/everstar-cli.sh ENG-XXXX
 
+# Run with specific user prefix
+./scripts/everstar-cli.sh ENG-XXXX kevjand
+
+# Interactive mode (pause between phases)
+./scripts/everstar-cli.sh ENG-XXXX --interactive
+
+# Swarm mode (experimental)
+./scripts/everstar-cli.sh ENG-XXXX --swarm
+
+# Resume from checkpoint
+./scripts/everstar-cli.sh ENG-XXXX --resume
+
+# Combine options
+./scripts/everstar-cli.sh ENG-XXXX kevjand --interactive --swarm
+```
+
+### Cleanup Commands
+
+```bash
 # Clean up old branches
 ./scripts/cleanup.sh --branches
 
@@ -303,16 +405,39 @@ gh auth status
 gh auth login
 ```
 
-### Swarm Not Starting
+### Swarm Mode Not Working
+
+If you're trying to use `--swarm` mode and encountering issues:
 
 ```bash
-# Check swarm status
+# Option 1: Use simple mode instead (recommended)
+./scripts/everstar-cli.sh ENG-XXXX --simple
+
+# Option 2: Check swarm status
 cd /Users/kevinandrade/Desktop/everstar/everstar
 npx @claude-flow/cli@latest swarm status
 
-# Reset if needed
+# Option 3: Reset swarm and try again
 npx @claude-flow/cli@latest swarm shutdown
 ./scripts/cleanup.sh --swarm
+./scripts/everstar-cli.sh ENG-XXXX --swarm
+```
+
+**Note:** The script automatically falls back to simple mode if swarm init fails, so you'll still get results even if swarm mode isn't working.
+
+### Agents Not Spawning
+
+If agents aren't spawning in simple mode:
+
+```bash
+# Check Claude Code version
+claude --version
+
+# Verify Agent tool is available
+# (Should be built-in to Claude Code)
+
+# Try with explicit mode
+./scripts/everstar-cli.sh ENG-XXXX --mode=simple
 ```
 
 ### Quality Gates Failing
@@ -375,9 +500,25 @@ cp .env.example .env
 - `$HOME/Desktop/everstar/everstar`
 - `$HOME/workspace/everstar`
 
-### Swarm Topology
+### Execution Mode Options
 
-Default: hierarchical-mesh with max 15 agents
+| Flag | Mode | Description | Status |
+|------|------|-------------|--------|
+| (none) | simple | Claude Code native agents, sequential execution | Default, production-ready |
+| `--simple` | simple | Explicitly use simple mode | Production-ready |
+| `--swarm` | swarm | Ruflo MCP coordination, parallel execution | Experimental |
+| `--mode=simple` | simple | Explicitly use simple mode | Production-ready |
+| `--mode=swarm` | swarm | Ruflo MCP coordination, parallel execution | Experimental |
+
+**Recommendation:** Use default simple mode unless testing swarm features.
+
+### Swarm Topology (Swarm Mode Only)
+
+When using `--swarm`, the system initializes with:
+- **Topology:** hierarchical-mesh
+- **Max Agents:** 8
+- **Strategy:** specialized
+- **Consensus:** Byzantine fault-tolerant
 
 To adjust (in everstar-cli.sh):
 ```bash
