@@ -14,7 +14,7 @@ fi
 # Parse arguments
 INTERACTIVE_MODE=false
 TICKET_ID=""
-USER_PREFIX=""
+CLI_USER_PREFIX=""  # Store CLI arg separately to not override .env
 
 for arg in "$@"; do
     case $arg in
@@ -25,15 +25,19 @@ for arg in "$@"; do
         *)
             if [ -z "$TICKET_ID" ]; then
                 TICKET_ID=$arg
-            elif [ -z "$USER_PREFIX" ]; then
-                USER_PREFIX=$arg
+            elif [ -z "$CLI_USER_PREFIX" ]; then
+                CLI_USER_PREFIX=$arg
             fi
             ;;
     esac
 done
 
-# Set defaults
-USER_PREFIX=${USER_PREFIX:-${USER_PREFIX:-"auto"}}  # CLI arg > .env > "auto"
+# Set USER_PREFIX with proper precedence: CLI arg > .env > "auto"
+if [ -n "$CLI_USER_PREFIX" ]; then
+    USER_PREFIX="$CLI_USER_PREFIX"
+elif [ -z "$USER_PREFIX" ]; then
+    USER_PREFIX="auto"
+fi
 
 # Auto-detect everstar repo location (works for any team member)
 if [ -z "$EVERSTAR_REPO" ]; then
@@ -171,7 +175,14 @@ ALL AGENTS MUST:
 
 ==== PHASE 0: TICKET ANALYSIS & ENRICHMENT ====
 
-1. Use Linear MCP to fetch ticket $TICKET_ID details
+1. Fetch ticket $TICKET_ID details using Linear MCP:
+   - Use linear_search_issues or linear_get_issue
+   - Timeout: 30 seconds max
+   - If Linear MCP hangs, times out, or returns an error: STOP and report failure
+   - Do NOT proceed without valid ticket data from Linear
+
+   CRITICAL: Linear connection is REQUIRED. If unavailable, exit with error message:
+   \"[ERROR] Cannot fetch ticket $TICKET_ID from Linear. Check LINEAR_API_KEY in .env or Linear MCP configuration.\"
 
 2. Spawn ticket-analyzer agent (run_in_background: true):
    Agent(subagent_type: reviewer, run_in_background: true)
@@ -271,7 +282,7 @@ ALL AGENTS MUST:
 
 ==== PHASE 3: EXECUTION (AFTER AUTOMATED APPROVAL) ====
 
-5. After plan-reviewer approval, spawn 6 execution agents in ONE message (run_in_background: true):
+5. After plan-reviewer approval, spawn 5 implementation agents in ONE message (run_in_background: true):
 
    ALL AGENTS MUST FIRST: Read $WORKTREE_PATH/CLAUDE.md and follow ALL project-specific rules
 
@@ -280,21 +291,26 @@ ALL AGENTS MUST:
    - tester: Read CLAUDE.md first, then write tests per project testing conventions, >85% coverage, edge cases, integration tests
    - security-auditor: Vulnerability scan, input validation, no secrets, check against CLAUDE.md security rules
    - reviewer: Verify CLAUDE.md compliance (project-specific conventions, quality gates from ticket-bot-standards.md)
-   - pr-manager: WAIT for other 5 agents to complete, then run quality gates, commit, push, and create PR
 
-6. The pr-manager agent is responsible for the ENTIRE final workflow (do NOT do this work yourself):
-   - Waits for all other agents to finish (you will be notified when they complete)
-   - Runs quality gates: pytest (quick check of new tests), ruff linting, verify no TODO/FIXME
-   - If security auditor found CRITICAL issues, pr-manager should evaluate if they are blocking or can be addressed in follow-up
-   - Stages all changes: git add -A
-   - Creates commit with lowercase format: eng-XXXX: [description] with details and Co-Authored-By: claude-flow
-   - Pushes to remote: git push origin $BRANCH
-   - Creates PR: gh pr create --base dev --head $BRANCH with comprehensive title and body
-   - Reports final status (PR URL, commit hash, files changed)
+5b. WAIT for ALL 5 agents to complete. You will receive notifications as each finishes. Do NOT proceed until you have confirmation that ALL 5 are done.
+
+5c. AFTER ALL 5 AGENTS COMPLETE, spawn pr-manager agent (run_in_background: true):
+   - pr-manager: Review all agent outputs, run quality gates, commit changes, push to remote, create PR with comprehensive description
+
+6. The pr-manager agent instructions (spawned AFTER the 5 agents complete):
+   - Review all agent outputs for blocking issues
+   - Run quality gates: pytest (quick check), ruff linting, verify no TODO/FIXME
+   - Evaluate security findings (critical vs follow-up)
+   - Stage all changes: git add -A
+   - Create commit: eng-XXXX: [description] with Co-Authored-By: claude-flow
+   - Push to remote: git push origin $BRANCH
+   - Create PR: gh pr create --base dev --head $BRANCH with comprehensive description
+   - Report final status (PR URL, commit hash, files changed)
 
 7. Your role as orchestrator:
-   - Spawn all 6 agents in Phase 3 (ONE message, all with run_in_background: true)
-   - Wait for agents to complete (you'll be notified automatically)
+   - Step 5: Spawn 5 implementation agents in ONE message (all with run_in_background: true)
+   - Step 5b: WAIT for ALL 5 to complete (you'll receive notifications)
+   - Step 5c: After all 5 finish, spawn pr-manager agent
    - Do NOT manually run quality gates, commits, or create PRs - let pr-manager handle everything
 
 FORBIDDEN: Do NOT create implementation markdown files (e.g., IMPLEMENTATION.md, CHANGES.md). The code, tests, and commit messages are the documentation.

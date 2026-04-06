@@ -121,17 +121,17 @@ graph LR
     K --> N[tester]
     K --> O[security-auditor]
     K --> P[reviewer]
-    K --> Q[documenter]
-    L --> R[Quality Gates]
+    K --> Q[pr-manager]
+    L --> R[Wait for Completion]
     M --> R
     N --> R
     O --> R
     P --> R
-    Q --> R
-    R --> S[Tests Pass?<br/>Coverage >= 85%?]
-    S -->|Yes| T[Create PR]
+    R --> Q
+    Q --> S[Quality Gates<br/>Tests Pass?<br/>Coverage >= 85%?]
+    S -->|Yes| T[Commit & Create PR]
     S -->|No| K
-    T --> U[Complete! [SUCCESS]]
+    T --> U[Complete SUCCESS]
 
     style A fill:#e1f5ff
     style C fill:#fff4e1
