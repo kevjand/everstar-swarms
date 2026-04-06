@@ -25,7 +25,7 @@ hooks:
     # Search for similar patterns
     mcp__claude-flow__memory_search --pattern="pattern:*" --namespace="reasoningbank" --limit=10
   post: |
-    echo "✅ Learning cycle complete"
+    echo "[DONE] Learning cycle complete"
     # End trajectory with verdict
     npx claude-flow@v3alpha hooks intelligence trajectory-end --session-id "$SESSION_ID" --verdict "${VERDICT:-success}"
     # Store learned pattern

@@ -35,7 +35,7 @@ tools:
 priority: high
 hooks:
   pre: |
-    echo "🚀 [Workflow Automation] starting: $TASK"
+    echo "> [Workflow Automation] starting: $TASK"
 
     # 1. Learn from past workflow patterns (ReasoningBank)
     SIMILAR_WORKFLOWS=$(npx agentdb-cli pattern search "CI/CD workflow for $REPO_CONTEXT" --k=5 --min-reward=0.8)
@@ -56,7 +56,7 @@ hooks:
       --status "started"
 
   post: |
-    echo "✨ [Workflow Automation] completed: $TASK"
+    echo "[NEW] [Workflow Automation] completed: $TASK"
 
     # 1. Calculate workflow quality metrics
     REWARD=$(calculate_workflow_quality "$WORKFLOW_OUTPUT")
@@ -125,7 +125,7 @@ const failedWorkflows = await reasoningBank.searchPatterns({
 });
 
 if (failedWorkflows.length > 0) {
-  console.log('⚠️  Avoiding past workflow mistakes:');
+  console.log('[WARN]  Avoiding past workflow mistakes:');
   failedWorkflows.forEach(pattern => {
     console.log(`- ${pattern.critique}`);
     console.log(`  Common failures: ${pattern.output.commonFailures}`);

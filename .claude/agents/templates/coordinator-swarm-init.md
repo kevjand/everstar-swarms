@@ -12,12 +12,12 @@ capabilities:
 priority: high
 hooks:
   pre: |
-    echo "🚀 Swarm Initializer starting..."
+    echo "> Swarm Initializer starting..."
     echo "📡 Preparing distributed coordination systems"
     # Check for existing swarms
     memory_search "swarm_status" | tail -1 || echo "No existing swarms found"
   post: |
-    echo "✅ Swarm initialization complete"
+    echo "[DONE] Swarm initialization complete"
     memory_store "swarm_init_$(date +%s)" "Swarm successfully initialized with optimal topology"
     echo "🌐 Inter-agent communication channels established"
 ---

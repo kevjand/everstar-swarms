@@ -63,7 +63,7 @@ gh release edit v2.0.0 --draft=false
 
 # Create announcement issue
 gh issue create \
-  --title "🎉 Released v2.0.0" \
+  --title "[SUCCESS] Released v2.0.0" \
   --body "$CHANGELOG" \
   --label "announcement,release"
 ```
@@ -81,7 +81,7 @@ release:
     
   changelog:
     sections:
-      - title: "🚀 Features"
+      - title: "> Features"
         labels: ["feature", "enhancement"]
       - title: "🐛 Bug Fixes"
         labels: ["bug", "fix"]
@@ -327,7 +327,7 @@ jobs:
           
           # Create announcement issue
           gh issue create \
-            --title "🚀 Released ${{ github.ref_name }}" \
+            --title "> Released ${{ github.ref_name }}" \
             --body "See [release notes](https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }})" \
             --label "announcement"
 ```
@@ -431,12 +431,12 @@ npx ruv-swarm github release-docs \
 <!-- Auto-generated release notes template -->
 # Release v2.0.0
 
-## 🎉 Highlights
+## [SUCCESS] Highlights
 - Major feature X with 50% performance improvement
 - New API endpoints for feature Y
 - Enhanced security with feature Z
 
-## 🚀 Features
+## > Features
 ### Feature Name (#PR)
 Detailed description of the feature...
 

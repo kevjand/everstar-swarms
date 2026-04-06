@@ -23,7 +23,7 @@ case "$1" in
       "$METRICS_DIR/v3-progress.json" > tmp.json && \
       mv tmp.json "$METRICS_DIR/v3-progress.json"
 
-    echo "✅ Updated domain count to $2/5"
+    echo "[DONE] Updated domain count to $2/5"
     ;;
 
   "agent")
@@ -38,7 +38,7 @@ case "$1" in
       "$METRICS_DIR/v3-progress.json" > tmp.json && \
       mv tmp.json "$METRICS_DIR/v3-progress.json"
 
-    echo "✅ Updated active agents to $2/15"
+    echo "[DONE] Updated active agents to $2/15"
     ;;
 
   "security")
@@ -59,7 +59,7 @@ case "$1" in
         mv tmp.json "$SECURITY_DIR/audit-status.json"
     fi
 
-    echo "✅ Updated security: $2/3 CVEs fixed"
+    echo "[DONE] Updated security: $2/3 CVEs fixed"
     ;;
 
   "performance")
@@ -74,7 +74,7 @@ case "$1" in
       "$METRICS_DIR/performance.json" > tmp.json && \
       mv tmp.json "$METRICS_DIR/performance.json"
 
-    echo "✅ Updated Flash Attention speedup to $2"
+    echo "[DONE] Updated Flash Attention speedup to $2"
     ;;
 
   "memory")
@@ -89,7 +89,7 @@ case "$1" in
       "$METRICS_DIR/performance.json" > tmp.json && \
       mv tmp.json "$METRICS_DIR/performance.json"
 
-    echo "✅ Updated memory reduction to $2"
+    echo "[DONE] Updated memory reduction to $2"
     ;;
 
   "ddd")
@@ -104,12 +104,12 @@ case "$1" in
       "$METRICS_DIR/v3-progress.json" > tmp.json && \
       mv tmp.json "$METRICS_DIR/v3-progress.json"
 
-    echo "✅ Updated DDD progress to $2%"
+    echo "[DONE] Updated DDD progress to $2%"
     ;;
 
   "status")
     # Show current status
-    echo "📊 V3 Development Status:"
+    echo "[STATS] V3 Development Status:"
     echo "========================"
 
     if [ -f "$METRICS_DIR/v3-progress.json" ]; then
@@ -117,7 +117,7 @@ case "$1" in
       agents=$(jq -r '.swarm.activeAgents // 0' "$METRICS_DIR/v3-progress.json")
       ddd=$(jq -r '.ddd.progress // 0' "$METRICS_DIR/v3-progress.json")
       echo "🏗️  Domains: $domains/5"
-      echo "🤖 Agents: $agents/15"
+      echo "[BOT] Agents: $agents/15"
       echo "📐 DDD: $ddd%"
     fi
 

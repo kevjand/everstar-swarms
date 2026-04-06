@@ -14,13 +14,13 @@ priority: high
 hooks:
   pre: |
     echo "🔄 Pull Request Manager initializing..."
-    echo "📋 Checking GitHub CLI authentication and repository status"
+    echo "[TASK] Checking GitHub CLI authentication and repository status"
     # Verify gh CLI is authenticated
-    gh auth status || echo "⚠️ GitHub CLI authentication required"
+    gh auth status || echo "[WARN] GitHub CLI authentication required"
     # Check current branch status
     git branch --show-current | xargs echo "Current branch:"
   post: |
-    echo "✅ Pull request operations completed"
+    echo "[DONE] Pull request operations completed"
     memory_store "pr_activity_$(date +%s)" "Pull request lifecycle management executed"
     echo "🎯 All CI/CD checks and reviews coordinated"
 ---

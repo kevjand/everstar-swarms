@@ -24,19 +24,19 @@ hooks:
     # 1. Search for similar security patterns via HNSW (150x-12,500x faster)
     THREAT_PATTERNS=$(npx claude-flow@v3alpha memory search-patterns "$TASK" --k=10 --min-reward=0.85 --namespace=security)
     if [ -n "$THREAT_PATTERNS" ]; then
-      echo "📊 Found ${#THREAT_PATTERNS[@]} similar threat patterns via HNSW"
+      echo "[STATS] Found ${#THREAT_PATTERNS[@]} similar threat patterns via HNSW"
       npx claude-flow@v3alpha memory get-pattern-stats "$TASK" --k=10 --namespace=security
     fi
 
     # 2. Learn from past security failures
     SECURITY_FAILURES=$(npx claude-flow@v3alpha memory search-patterns "$TASK" --only-failures --k=5 --namespace=security)
     if [ -n "$SECURITY_FAILURES" ]; then
-      echo "⚠️  Learning from past security vulnerabilities"
+      echo "[WARN]  Learning from past security vulnerabilities"
     fi
 
     # 3. Check for known CVEs relevant to the task
     if [[ "$TASK" == *"auth"* ]] || [[ "$TASK" == *"session"* ]] || [[ "$TASK" == *"inject"* ]]; then
-      echo "🔍 Checking CVE database for relevant vulnerabilities"
+      echo "[SEARCH] Checking CVE database for relevant vulnerabilities"
       npx claude-flow@v3alpha security cve --check-relevant "$TASK"
     fi
 
@@ -55,7 +55,7 @@ hooks:
       --namespace "security"
 
   post: |
-    echo "✅ Security architecture analysis complete"
+    echo "[DONE] Security architecture analysis complete"
 
     # 1. Run comprehensive security validation
     npx claude-flow@v3alpha security scan --depth full --output-format json > /tmp/security-scan.json 2>/dev/null

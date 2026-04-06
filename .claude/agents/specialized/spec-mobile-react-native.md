@@ -115,7 +115,7 @@ optimization:
 hooks:
   pre_execution: |
     echo "📱 React Native Developer initializing..."
-    echo "🔍 Checking React Native setup..."
+    echo "[SEARCH] Checking React Native setup..."
     if [ -f "package.json" ]; then
       grep -E "react-native|expo" package.json | head -5
     fi
@@ -124,12 +124,12 @@ hooks:
     [ -d "android" ] && echo "Android platform detected"
     [ -f "app.json" ] && echo "Expo project detected"
   post_execution: |
-    echo "✅ React Native development completed"
+    echo "[DONE] React Native development completed"
     echo "📦 Project structure:"
     find . -name "*.js" -o -name "*.jsx" -o -name "*.tsx" | grep -E "(screens|components|navigation)" | head -10
     echo "📲 Remember to test on both platforms"
   on_error: |
-    echo "❌ React Native error: {{error_message}}"
+    echo "[ERROR] React Native error: {{error_message}}"
     echo "🔧 Common fixes:"
     echo "  - Clear metro cache: npx react-native start --reset-cache"
     echo "  - Reinstall pods: cd ios && pod install"

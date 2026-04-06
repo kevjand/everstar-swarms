@@ -20,7 +20,7 @@ hooks:
   post: |
     echo "📝 Raft operation complete"
     # Verify log consistency
-    echo "🔍 Validating log replication and consistency"
+    echo "[SEARCH] Validating log replication and consistency"
 ---
 
 # Raft Consensus Manager

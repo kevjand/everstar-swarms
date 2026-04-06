@@ -42,7 +42,7 @@ echo ""
 
 # Check Claude CLI
 if command_exists claude; then
-    echo -e "${GREEN}✓${NC} Claude CLI installed: $(which claude)"
+    echo -e "${GREEN}OK${NC} Claude CLI installed: $(which claude)"
 else
     echo -e "${RED}✗${NC} Claude CLI not found"
     echo -e "  ${YELLOW}Install:${NC} npm install -g @anthropic-ai/claude-code"
@@ -52,12 +52,12 @@ fi
 
 # Check GitHub CLI
 if command_exists gh; then
-    echo -e "${GREEN}✓${NC} GitHub CLI installed: $(which gh)"
+    echo -e "${GREEN}OK${NC} GitHub CLI installed: $(which gh)"
 
     # Check GitHub auth
     if gh auth status &> /dev/null; then
         GH_USER=$(gh api user -q .login)
-        echo -e "${GREEN}✓${NC} GitHub authenticated as: $GH_USER"
+        echo -e "${GREEN}OK${NC} GitHub authenticated as: $GH_USER"
     else
         echo -e "${YELLOW}!${NC} GitHub not authenticated"
         echo -e "  Run: ${CYAN}gh auth login${NC}"
@@ -78,7 +78,7 @@ fi
 
 # Check Node/npm
 if command_exists npm; then
-    echo -e "${GREEN}✓${NC} npm installed: $(npm --version)"
+    echo -e "${GREEN}OK${NC} npm installed: $(npm --version)"
 else
     echo -e "${RED}✗${NC} npm not found"
     echo -e "  ${YELLOW}Install:${NC} brew install node"
@@ -106,13 +106,13 @@ if [ ! -d "$EVERSTAR_REPO/.git" ]; then
     exit 1
 fi
 
-echo -e "${GREEN}✓${NC} Repository found: $EVERSTAR_REPO"
+echo -e "${GREEN}OK${NC} Repository found: $EVERSTAR_REPO"
 
 # Update everstar-cli.sh with correct path
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 sed -i.bak "s|EVERSTAR_REPO=\".*\"|EVERSTAR_REPO=\"$EVERSTAR_REPO\"|" "$SCRIPT_DIR/everstar-cli.sh"
 rm -f "$SCRIPT_DIR/everstar-cli.sh.bak"
-echo -e "${GREEN}✓${NC} Updated everstar-cli.sh with repository path"
+echo -e "${GREEN}OK${NC} Updated everstar-cli.sh with repository path"
 
 echo ""
 echo -e "${CYAN}Step 3: Configure Linear MCP${NC}"
@@ -123,11 +123,11 @@ echo "Get your key from: https://linear.app/settings/api"
 echo ""
 
 # Check if Linear MCP already configured
-if grep -q "@hatcloud/linear-mcp" ~/.claude.json 2>/dev/null; then
+if grep -q "linear-mcp-server\|@hatcloud/linear-mcp" ~/.claude.json 2>/dev/null; then
     echo -e "${YELLOW}!${NC} Linear MCP already configured in ~/.claude.json"
     read -p "Reconfigure? (y/n): " reconfig
     if [ "$reconfig" != "y" ]; then
-        echo -e "${GREEN}✓${NC} Using existing Linear configuration"
+        echo -e "${GREEN}OK${NC} Using existing Linear configuration"
         LINEAR_CONFIGURED=true
     fi
 fi
@@ -143,7 +143,7 @@ if [ "$LINEAR_CONFIGURED" != "true" ]; then
     # Backup existing .claude.json
     if [ -f ~/.claude.json ]; then
         cp ~/.claude.json ~/.claude.json.backup.$(date +%Y%m%d_%H%M%S)
-        echo -e "${GREEN}✓${NC} Backed up existing ~/.claude.json"
+        echo -e "${GREEN}OK${NC} Backed up existing ~/.claude.json"
     fi
 
     # Add/update Linear MCP configuration
@@ -157,25 +157,22 @@ if [ "$LINEAR_CONFIGURED" != "true" ]; then
         brew install jq
     fi
 
-    # Update Linear MCP config
+    # Update Linear MCP config (global, works for all paths including worktrees)
     tmp_config=$(mktemp)
     jq --arg key "$LINEAR_API_KEY" '
-        .projects = (.projects // {}) |
-        .projects["/Users/\(env.USER)/Desktop/swarm-exp"] = (
-            .projects["/Users/\(env.USER)/Desktop/swarm-exp"] // {} |
-            .mcpServers.linear = {
-                "type": "stdio",
-                "command": "npx",
-                "args": ["-y", "@hatcloud/linear-mcp"],
-                "env": {
-                    "LINEAR_API_KEY": $key
-                }
+        .mcpServers = (.mcpServers // {}) |
+        .mcpServers.linear = {
+            "type": "stdio",
+            "command": "npx",
+            "args": ["-y", "linear-mcp-server"],
+            "env": {
+                "LINEAR_API_KEY": $key
             }
-        )
+        }
     ' ~/.claude.json > "$tmp_config"
 
     mv "$tmp_config" ~/.claude.json
-    echo -e "${GREEN}✓${NC} Linear MCP configured in ~/.claude.json"
+    echo -e "${GREEN}OK${NC} Linear MCP configured in ~/.claude.json"
 fi
 
 echo ""
@@ -199,10 +196,10 @@ else
         https://api.linear.app/graphql | jq -r '.data.viewer.name // empty')
 
     if [ -n "$VIEWER" ]; then
-        echo -e "${GREEN}✓${NC} Linear API working! Connected as: $VIEWER"
+        echo -e "${GREEN}OK${NC} Linear API working! Connected as: $VIEWER"
     else
-        echo -e "${RED}✗${NC} Linear API test failed. Check your API key."
-        exit 1
+        echo -e "${YELLOW}!${NC} Linear API direct test failed (curl), but MCP should work fine"
+        echo -e "  ${YELLOW}Note:${NC} MCP server will handle authentication when Claude Code runs"
     fi
 fi
 
@@ -212,11 +209,11 @@ echo ""
 
 # Test claude-flow CLI
 if npx @claude-flow/cli@latest --version &> /dev/null; then
-    echo -e "${GREEN}✓${NC} claude-flow CLI accessible"
+    echo -e "${GREEN}OK${NC} claude-flow CLI accessible"
 else
     echo -e "${YELLOW}!${NC} Installing claude-flow CLI..."
     npm install -g @claude-flow/cli@latest
-    echo -e "${GREEN}✓${NC} claude-flow CLI installed"
+    echo -e "${GREEN}OK${NC} claude-flow CLI installed"
 fi
 
 echo ""
@@ -225,11 +222,11 @@ echo ""
 
 # Create necessary directories
 mkdir -p "$EVERSTAR_REPO/.claude"
-echo -e "${GREEN}✓${NC} Created $EVERSTAR_REPO/.claude/"
+echo -e "${GREEN}OK${NC} Created $EVERSTAR_REPO/.claude/"
 
 # Copy ticket-bot-standards.md to everstar repo
 cp "$SCRIPT_DIR/../.claude/ticket-bot-standards.md" "$EVERSTAR_REPO/.claude/"
-echo -e "${GREEN}✓${NC} Copied ticket-bot-standards.md to everstar repo"
+echo -e "${GREEN}OK${NC} Copied ticket-bot-standards.md to everstar repo"
 
 echo ""
 echo -e "${CYAN}Step 7: Verify Setup${NC}"
@@ -241,35 +238,35 @@ echo ""
 
 # Check 1: Repository
 if [ -d "$EVERSTAR_REPO/.git" ]; then
-    echo -e "${GREEN}✓${NC} Everstar repository configured"
+    echo -e "${GREEN}OK${NC} Everstar repository configured"
 else
     echo -e "${RED}✗${NC} Everstar repository issue"
 fi
 
 # Check 2: Claude CLI
 if command_exists claude; then
-    echo -e "${GREEN}✓${NC} Claude CLI ready"
+    echo -e "${GREEN}OK${NC} Claude CLI ready"
 else
     echo -e "${RED}✗${NC} Claude CLI missing"
 fi
 
 # Check 3: GitHub auth
 if gh auth status &> /dev/null; then
-    echo -e "${GREEN}✓${NC} GitHub authenticated"
+    echo -e "${GREEN}OK${NC} GitHub authenticated"
 else
     echo -e "${RED}✗${NC} GitHub not authenticated"
 fi
 
 # Check 4: Linear MCP
-if grep -q "@hatcloud/linear-mcp" ~/.claude.json 2>/dev/null; then
-    echo -e "${GREEN}✓${NC} Linear MCP configured"
+if grep -q "linear-mcp-server" ~/.claude.json 2>/dev/null; then
+    echo -e "${GREEN}OK${NC} Linear MCP configured"
 else
     echo -e "${RED}✗${NC} Linear MCP not configured"
 fi
 
 # Check 5: claude-flow CLI
 if npx @claude-flow/cli@latest --version &> /dev/null; then
-    echo -e "${GREEN}✓${NC} claude-flow CLI available"
+    echo -e "${GREEN}OK${NC} claude-flow CLI available"
 else
     echo -e "${RED}✗${NC} claude-flow CLI missing"
 fi

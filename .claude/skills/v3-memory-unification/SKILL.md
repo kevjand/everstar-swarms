@@ -37,7 +37,7 @@ Task("Memory migration", "Migrate SQLite/Markdown to AgentDB", "v3-memory-specia
 └─────────────────────────────────────────┘
                     ↓
 ┌─────────────────────────────────────────┐
-│       🚀 AgentDB with HNSW             │
+│       > AgentDB with HNSW             │
 │  • 150x-12,500x faster search          │
 │  • Unified query interface             │
 │  • Cross-agent memory sharing          │

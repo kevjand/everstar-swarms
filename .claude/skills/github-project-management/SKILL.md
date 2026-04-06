@@ -281,22 +281,22 @@ gh issue edit 456 --body "$UPDATED_BODY"
 
 # Post progress summary as comment
 SUMMARY=$(echo "$PROGRESS" | jq -r '
-"## 📊 Progress Update
+"## [STATS] Progress Update
 
 **Completion**: \(.completion)%
 **ETA**: \(.eta)
 
 ### Completed Tasks
-\(.completed | map("- ✅ " + .) | join("\n"))
+\(.completed | map("- [DONE] " + .) | join("\n"))
 
 ### In Progress
 \(.in_progress | map("- 🔄 " + .) | join("\n"))
 
 ### Remaining
-\(.remaining | map("- ⏳ " + .) | join("\n"))
+\(.remaining | map("- [WAIT] " + .) | join("\n"))
 
 ---
-🤖 Automated update by swarm agent"')
+[BOT] Automated update by swarm agent"')
 
 gh issue comment 456 --body "$SUMMARY"
 
@@ -402,7 +402,7 @@ mapping:
   agents:
     coder: "🔧 Development"
     tester: "🧪 Testing"
-    analyst: "📊 Analysis"
+    analyst: "[STATS] Analysis"
     designer: "🎨 Design"
     architect: "🏗️ Architecture"
 
@@ -853,7 +853,7 @@ npx ruv-swarm github review-coordinate \
 Updates will be posted automatically by swarm agents during implementation.
 
 ---
-🤖 Generated with Claude Code
+[BOT] Generated with Claude Code
 ```
 
 ### Bug Report Template
@@ -892,13 +892,13 @@ Updates will be posted automatically by swarm agents during implementation.
 - **Tester**: Validation and testing
 
 ---
-🤖 Generated with Claude Code
+[BOT] Generated with Claude Code
 ```
 
 ### Feature Request Template
 
 ```markdown
-## ✨ Feature Request
+## [NEW] Feature Request
 
 ### Feature Description
 [Clear description of the proposed feature]
@@ -936,7 +936,7 @@ Updates will be posted automatically by swarm agents during implementation.
 - **Documenter**: Documentation
 
 ---
-🤖 Generated with Claude Code
+[BOT] Generated with Claude Code
 ```
 
 ### Swarm Task Template

@@ -17,10 +17,10 @@ hooks:
     echo "🧪 Preparing TDD workflow: Red → Green → Refactor"
     # Check for test files and create if needed
     if [ ! -d "tests" ] && [ ! -d "test" ] && [ ! -d "__tests__" ]; then
-      echo "📁 No test directory found - will create during implementation"
+      echo "[DIR] No test directory found - will create during implementation"
     fi
   post: |
-    echo "✨ Implementation phase complete"
+    echo "[NEW] Implementation phase complete"
     echo "🧪 Running test suite to verify implementation"
     # Run tests if available
     if [ -f "package.json" ]; then
@@ -28,7 +28,7 @@ hooks:
     elif [ -f "pytest.ini" ] || [ -f "setup.py" ]; then
       python -m pytest --version > /dev/null 2>&1 && python -m pytest -v || echo "pytest not available"
     fi
-    echo "📊 Implementation metrics stored in memory"
+    echo "[STATS] Implementation metrics stored in memory"
 ---
 
 # SPARC Implementation Specialist Agent

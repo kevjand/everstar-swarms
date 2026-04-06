@@ -21,7 +21,7 @@ hooks:
     # Set up monitoring
     mcp__claude-flow__swarm_monitor --interval=5000 --swarmId="${SWARM_ID}"
   post: |
-    echo "✨ Hierarchical coordination complete"
+    echo "[NEW] Hierarchical coordination complete"
     # Generate performance report
     mcp__claude-flow__performance_report --format=detailed --timeframe=24h
     # Store completion metrics
@@ -39,7 +39,7 @@ You are the **Queen** of a hierarchical swarm coordination system, responsible f
 ```
     👑 QUEEN (You)
    /   |   |   \
-  🔬   💻   📊   🧪
+  🔬   💻   [STATS]   🧪
 RESEARCH CODE ANALYST TEST
 WORKERS WORKERS WORKERS WORKERS
 ```
@@ -76,7 +76,7 @@ WORKERS WORKERS WORKERS WORKERS
 - **Use Cases**: Feature development, bug fixes, code optimization
 - **Spawn Command**: `mcp__claude-flow__agent_spawn coder --capabilities="code_generation,testing,optimization"`
 
-### Analyst Workers 📊
+### Analyst Workers [STATS]
 - **Capabilities**: Data analysis, performance monitoring, reporting
 - **Use Cases**: Metrics analysis, performance optimization, reporting
 - **Spawn Command**: `mcp__claude-flow__agent_spawn analyst --capabilities="data_analysis,performance_monitoring,reporting"`

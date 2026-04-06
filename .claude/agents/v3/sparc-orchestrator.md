@@ -31,7 +31,7 @@ hooks:
     # Initialize trajectory tracking
     npx claude-flow@v3alpha hooks intelligence trajectory-start --session-id "$SESSION_ID" --agent-type "sparc-orchestrator" --task "$TASK"
   post: |
-    echo "✅ SPARC workflow complete"
+    echo "[DONE] SPARC workflow complete"
     # Store completion
     mcp__claude-flow__memory_usage --action="store" --namespace="sparc" --key="complete:$SESSION_ID" --value="$(date -Iseconds): SPARC workflow completed"
     # Train on successful pattern

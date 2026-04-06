@@ -34,7 +34,7 @@ hooks:
     fi
 
     # 3. GNN search for similar system designs
-    echo "🔍 Using GNN to find related system architectures..."
+    echo "[SEARCH] Using GNN to find related system architectures..."
 
     # 4. Use Flash Attention for large architecture documents
     echo "⚡ Using Flash Attention for processing large architecture docs"
@@ -49,7 +49,7 @@ hooks:
       --status "started" 2>/dev/null || true
 
   post: |
-    echo "✅ Architecture phase complete"
+    echo "[DONE] Architecture phase complete"
 
     # 1. Calculate architecture quality metrics
     REWARD=0.90  # Based on scalability, maintainability, clarity
@@ -116,7 +116,7 @@ const architectureFailures = await reasoningBank.searchPatterns({
 });
 
 if (architectureFailures.length > 0) {
-  console.log('⚠️  Avoiding past architecture mistakes:');
+  console.log('[WARN]  Avoiding past architecture mistakes:');
   architectureFailures.forEach(pattern => {
     console.log(`- ${pattern.critique}`);
     // Avoid tight coupling

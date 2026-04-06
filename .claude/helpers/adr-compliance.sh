@@ -161,7 +161,7 @@ check_compliance() {
 }
 EOF
 
-  echo "[$(date +%H:%M:%S)] ✓ ADR Compliance: ${avg_score}% | Compliant: $compliant_count/10"
+  echo "[$(date +%H:%M:%S)] OK ADR Compliance: ${avg_score}% | Compliant: $compliant_count/10"
 
   date +%s > "$LAST_RUN_FILE"
 }

@@ -13,14 +13,14 @@ capabilities:
 priority: high
 hooks:
   pre: |
-    echo "📊 Performance Analyzer starting analysis"
+    echo "[STATS] Performance Analyzer starting analysis"
     memory_store "analysis_start" "$(date +%s)"
     # Collect baseline metrics
     echo "📈 Collecting baseline performance metrics"
   post: |
-    echo "✅ Performance analysis complete"
+    echo "[DONE] Performance analysis complete"
     memory_store "perf_analysis_complete_$(date +%s)" "Performance report generated"
-    echo "💡 Optimization recommendations available"
+    echo "[INFO] Optimization recommendations available"
 ---
 
 # Performance Bottleneck Analyzer Agent

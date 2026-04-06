@@ -27,7 +27,7 @@ tools:
 priority: high
 hooks:
   pre: |
-    echo "🚀 [Code Review Swarm] starting: $TASK"
+    echo "> [Code Review Swarm] starting: $TASK"
 
     # 1. Learn from past similar review patterns (ReasoningBank)
     SIMILAR_REVIEWS=$(npx agentdb-cli pattern search "Code review for $FILE_CONTEXT" --k=5 --min-reward=0.8)
@@ -48,7 +48,7 @@ hooks:
       --status "started"
 
   post: |
-    echo "✨ [Code Review Swarm] completed: $TASK"
+    echo "[NEW] [Code Review Swarm] completed: $TASK"
 
     # 1. Calculate review quality metrics
     REWARD=$(calculate_review_quality "$REVIEW_OUTPUT")
@@ -122,7 +122,7 @@ const failedReviews = await reasoningBank.searchPatterns({
 });
 
 if (failedReviews.length > 0) {
-  console.log('⚠️  Avoiding past review mistakes:');
+  console.log('[WARN]  Avoiding past review mistakes:');
   failedReviews.forEach(pattern => {
     console.log(`- ${pattern.critique}`);
     console.log(`  False positive rate: ${pattern.output.falsePositiveRate}`);
@@ -305,7 +305,7 @@ npx claude-flow@v3alpha github review-init \
   --depth comprehensive
 
 # Post initial review status
-gh pr comment 123 --body "🔍 Multi-agent code review initiated"
+gh pr comment 123 --body "[SEARCH] Multi-agent code review initiated"
 ```
 
 ### 2. Specialized Review Agents

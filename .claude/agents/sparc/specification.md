@@ -19,7 +19,7 @@ priority: high
 sparc_phase: specification
 hooks:
   pre: |
-    echo "📋 SPARC Specification phase initiated"
+    echo "[TASK] SPARC Specification phase initiated"
     memory_store "sparc_phase" "specification"
     memory_store "spec_start_$(date +%s)" "Task: $TASK"
 
@@ -41,7 +41,7 @@ hooks:
       --status "started" 2>/dev/null || true
 
   post: |
-    echo "✅ Specification phase complete"
+    echo "[DONE] Specification phase complete"
 
     # 1. Calculate specification quality metrics
     REWARD=0.85  # Default, should be calculated based on completeness
@@ -108,7 +108,7 @@ const failures = await reasoningBank.searchPatterns({
 });
 
 if (failures.length > 0) {
-  console.log('⚠️  Avoiding past specification mistakes:');
+  console.log('[WARN]  Avoiding past specification mistakes:');
   failures.forEach(pattern => {
     console.log(`- ${pattern.critique}`);
     // Avoid ambiguous requirements

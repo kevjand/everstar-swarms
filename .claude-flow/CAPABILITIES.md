@@ -2,7 +2,7 @@
 > Generated: 2026-03-30T22:44:30.879Z
 > Full documentation: https://github.com/ruvnet/claude-flow
 
-## 📋 Table of Contents
+## [TASK] Table of Contents
 
 1. [Overview](#overview)
 2. [Swarm Orchestration](#swarm-orchestration)
@@ -241,9 +241,9 @@ npx @claude-flow/cli@latest doctor --fix
 
 | Component | Status | Description |
 |-----------|--------|-------------|
-| **LearningBridge** | ✅ Enabled | Connects insights to SONA/ReasoningBank neural pipeline |
-| **MemoryGraph** | ✅ Enabled | PageRank knowledge graph + community detection |
-| **AgentMemoryScope** | ✅ Enabled | 3-scope agent memory (project/local/user) |
+| **LearningBridge** | [DONE] Enabled | Connects insights to SONA/ReasoningBank neural pipeline |
+| **MemoryGraph** | [DONE] Enabled | PageRank knowledge graph + community detection |
+| **AgentMemoryScope** | [DONE] Enabled | 3-scope agent memory (project/local/user) |
 
 **LearningBridge** - Insights trigger learning trajectories. Confidence evolves: +0.03 on access, -0.005/hour decay. Consolidation runs the JUDGE/DISTILL/CONSOLIDATE pipeline.
 
@@ -315,18 +315,18 @@ npx @claude-flow/cli@latest hive-mind consensus --propose "task"
 
 | Metric | Target | Status |
 |--------|--------|--------|
-| HNSW Search | 150x-12,500x faster | ✅ Implemented |
-| Memory Reduction | 50-75% | ✅ Implemented (3.92x) |
-| SONA Integration | Pattern learning | ✅ Implemented |
+| HNSW Search | 150x-12,500x faster | [DONE] Implemented |
+| Memory Reduction | 50-75% | [DONE] Implemented (3.92x) |
+| SONA Integration | Pattern learning | [DONE] Implemented |
 | Flash Attention | 2.49x-7.47x | 🔄 In Progress |
-| MCP Response | <100ms | ✅ Achieved |
-| CLI Startup | <500ms | ✅ Achieved |
+| MCP Response | <100ms | [DONE] Achieved |
+| CLI Startup | <500ms | [DONE] Achieved |
 | SONA Adaptation | <0.05ms | 🔄 In Progress |
-| Graph Build (1k) | <200ms | ✅ 2.78ms (71.9x headroom) |
-| PageRank (1k) | <100ms | ✅ 12.21ms (8.2x headroom) |
-| Insight Recording | <5ms/each | ✅ 0.12ms (41x headroom) |
-| Consolidation | <500ms | ✅ 0.26ms (1,955x headroom) |
-| Knowledge Transfer | <100ms | ✅ 1.25ms (80x headroom) |
+| Graph Build (1k) | <200ms | [DONE] 2.78ms (71.9x headroom) |
+| PageRank (1k) | <100ms | [DONE] 12.21ms (8.2x headroom) |
+| Insight Recording | <5ms/each | [DONE] 0.12ms (41x headroom) |
+| Consolidation | <500ms | [DONE] 0.26ms (1,955x headroom) |
+| Knowledge Transfer | <100ms | [DONE] 1.25ms (80x headroom) |
 
 ---
 

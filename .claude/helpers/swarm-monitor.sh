@@ -158,7 +158,7 @@ check_once() {
     log "  Estimated agents: $agent_count"
 
     if [ "$agent_count" -gt 0 ] || [ "$agentic_count" -gt 0 ]; then
-        success "✓ Swarm activity detected and metrics updated"
+        success "OK Swarm activity detected and metrics updated"
     else
         warn "⚠ No swarm activity detected"
     fi

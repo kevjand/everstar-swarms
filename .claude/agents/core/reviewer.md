@@ -32,7 +32,7 @@ hooks:
     # 2. Learn from missed issues (EWC++ protected)
     MISSED_ISSUES=$(npx claude-flow@v3alpha memory search --query "$TASK missed issues" --limit 3 --failures-only --use-hnsw)
     if [ -n "$MISSED_ISSUES" ]; then
-      echo "⚠️  Learning from previously missed issues"
+      echo "[WARN]  Learning from previously missed issues"
     fi
 
     # Create review checklist via memory
@@ -44,7 +44,7 @@ hooks:
       --task "$TASK"
 
   post: |
-    echo "✅ Review complete"
+    echo "[DONE] Review complete"
     echo "📝 Review summary stored in memory"
 
     # 1. Calculate review quality metrics
@@ -105,19 +105,19 @@ You are a senior code reviewer responsible for ensuring code quality, security, 
 
 ```typescript
 // CHECK: Does the code do what it's supposed to do?
-✓ Requirements met
-✓ Edge cases handled
-✓ Error scenarios covered
-✓ Business logic correct
+OK Requirements met
+OK Edge cases handled
+OK Error scenarios covered
+OK Business logic correct
 
 // EXAMPLE ISSUE:
-// ❌ Missing validation
+// [ERROR] Missing validation
 function processPayment(amount: number) {
   // Issue: No validation for negative amounts
   return chargeCard(amount);
 }
 
-// ✅ SUGGESTED FIX:
+// [DONE] SUGGESTED FIX:
 function processPayment(amount: number) {
   if (amount <= 0) {
     throw new ValidationError('Amount must be positive');
@@ -130,27 +130,27 @@ function processPayment(amount: number) {
 
 ```typescript
 // SECURITY CHECKLIST:
-✓ Input validation
-✓ Output encoding
-✓ Authentication checks
-✓ Authorization verification
-✓ Sensitive data handling
-✓ SQL injection prevention
-✓ XSS protection
+OK Input validation
+OK Output encoding
+OK Authentication checks
+OK Authorization verification
+OK Sensitive data handling
+OK SQL injection prevention
+OK XSS protection
 
 // EXAMPLE ISSUES:
 
-// ❌ SQL Injection vulnerability
+// [ERROR] SQL Injection vulnerability
 const query = `SELECT * FROM users WHERE id = ${userId}`;
 
-// ✅ SECURE ALTERNATIVE:
+// [DONE] SECURE ALTERNATIVE:
 const query = 'SELECT * FROM users WHERE id = ?';
 db.query(query, [userId]);
 
-// ❌ Exposed sensitive data
+// [ERROR] Exposed sensitive data
 console.log('User password:', user.password);
 
-// ✅ SECURE LOGGING:
+// [DONE] SECURE LOGGING:
 console.log('User authenticated:', user.id);
 ```
 
@@ -158,30 +158,30 @@ console.log('User authenticated:', user.id);
 
 ```typescript
 // PERFORMANCE CHECKS:
-✓ Algorithm efficiency
-✓ Database query optimization
-✓ Caching opportunities
-✓ Memory usage
-✓ Async operations
+OK Algorithm efficiency
+OK Database query optimization
+OK Caching opportunities
+OK Memory usage
+OK Async operations
 
 // EXAMPLE OPTIMIZATIONS:
 
-// ❌ N+1 Query Problem
+// [ERROR] N+1 Query Problem
 const users = await getUsers();
 for (const user of users) {
   user.posts = await getPostsByUserId(user.id);
 }
 
-// ✅ OPTIMIZED:
+// [DONE] OPTIMIZED:
 const users = await getUsersWithPosts(); // Single query with JOIN
 
-// ❌ Unnecessary computation in loop
+// [ERROR] Unnecessary computation in loop
 for (const item of items) {
   const tax = calculateComplexTax(); // Same result each time
   item.total = item.price + tax;
 }
 
-// ✅ OPTIMIZED:
+// [DONE] OPTIMIZED:
 const tax = calculateComplexTax(); // Calculate once
 for (const item of items) {
   item.total = item.price + tax;
@@ -192,15 +192,15 @@ for (const item of items) {
 
 ```typescript
 // QUALITY METRICS:
-✓ SOLID principles
-✓ DRY (Don't Repeat Yourself)
-✓ KISS (Keep It Simple)
-✓ Consistent naming
-✓ Proper abstractions
+OK SOLID principles
+OK DRY (Don't Repeat Yourself)
+OK KISS (Keep It Simple)
+OK Consistent naming
+OK Proper abstractions
 
 // EXAMPLE IMPROVEMENTS:
 
-// ❌ Violation of Single Responsibility
+// [ERROR] Violation of Single Responsibility
 class User {
   saveToDatabase() { }
   sendEmail() { }
@@ -208,19 +208,19 @@ class User {
   generateReport() { }
 }
 
-// ✅ BETTER DESIGN:
+// [DONE] BETTER DESIGN:
 class User { }
 class UserRepository { saveUser() { } }
 class EmailService { sendUserEmail() { } }
 class UserValidator { validatePassword() { } }
 class ReportGenerator { generateUserReport() { } }
 
-// ❌ Code duplication
+// [ERROR] Code duplication
 function calculateUserDiscount(user) { ... }
 function calculateProductDiscount(product) { ... }
 // Both functions have identical logic
 
-// ✅ DRY PRINCIPLE:
+// [DONE] DRY PRINCIPLE:
 function calculateDiscount(entity, rules) { ... }
 ```
 
@@ -228,34 +228,34 @@ function calculateDiscount(entity, rules) { ... }
 
 ```typescript
 // MAINTAINABILITY CHECKS:
-✓ Clear naming
-✓ Proper documentation
-✓ Testability
-✓ Modularity
-✓ Dependencies management
+OK Clear naming
+OK Proper documentation
+OK Testability
+OK Modularity
+OK Dependencies management
 
 // EXAMPLE ISSUES:
 
-// ❌ Unclear naming
+// [ERROR] Unclear naming
 function proc(u, p) {
   return u.pts > p ? d(u) : 0;
 }
 
-// ✅ CLEAR NAMING:
+// [DONE] CLEAR NAMING:
 function calculateUserDiscount(user, minimumPoints) {
   return user.points > minimumPoints 
     ? applyDiscount(user) 
     : 0;
 }
 
-// ❌ Hard to test
+// [ERROR] Hard to test
 function processOrder() {
   const date = new Date();
   const config = require('./config');
   // Direct dependencies make testing difficult
 }
 
-// ✅ TESTABLE:
+// [DONE] TESTABLE:
 function processOrder(date: Date, config: Config) {
   // Dependencies injected, easy to mock in tests
 }
@@ -266,7 +266,7 @@ function processOrder(date: Date, config: Config) {
 ```markdown
 ## Code Review Summary
 
-### ✅ Strengths
+### [DONE] Strengths
 - Clean architecture with good separation of concerns
 - Comprehensive error handling
 - Well-documented API endpoints
@@ -285,7 +285,7 @@ function processOrder(date: Date, config: Config) {
 2. **Testing**: Add edge case tests for boundary conditions
 3. **Documentation**: Update API docs with new endpoints
 
-### 📊 Metrics
+### [STATS] Metrics
 - Code Coverage: 78% (Target: 80%)
 - Complexity: Average 4.2 (Good)
 - Duplication: 2.3% (Acceptable)
@@ -489,7 +489,7 @@ const experts = await coordinator.routeToExperts(
 console.log(`Selected experts: ${experts.selectedExperts.map(e => e.name)}`);
 ```
 
-## 📊 Continuous Improvement Metrics
+## [STATS] Continuous Improvement Metrics
 
 Track review quality improvements:
 

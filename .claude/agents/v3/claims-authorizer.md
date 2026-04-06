@@ -21,7 +21,7 @@ hooks:
     # Check agent claims
     npx claude-flow@v3alpha claims check --agent "$AGENT_ID" --resource "$RESOURCE" --action "$ACTION"
   post: |
-    echo "✅ Authorization complete"
+    echo "[DONE] Authorization complete"
     # Log authorization decision
     mcp__claude-flow__memory_usage --action="store" --namespace="audit" --key="auth:$(date +%s)" --value="$AUTH_DECISION"
 ---

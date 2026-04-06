@@ -32,7 +32,7 @@ hooks:
     # 2. Learn from failed plans (EWC++ protected)
     FAILED_PLANS=$(npx claude-flow@v3alpha memory search --query "$TASK failures" --limit 3 --failures-only --use-hnsw)
     if [ -n "$FAILED_PLANS" ]; then
-      echo "⚠️  Learning from past planning failures"
+      echo "[WARN]  Learning from past planning failures"
     fi
 
     npx claude-flow@v3alpha memory store --key "planner_start_$(date +%s)" --value "Started planning: $TASK"
@@ -43,7 +43,7 @@ hooks:
       --task "$TASK"
 
   post: |
-    echo "✅ Planning complete"
+    echo "[DONE] Planning complete"
     npx claude-flow@v3alpha memory store --key "planner_end_$(date +%s)" --value "Completed planning: $TASK"
 
     # 1. Calculate planning quality metrics
@@ -330,7 +330,7 @@ console.log(`Strategic plan: ${hierarchicalPlan.queenDecisions}`);
 console.log(`Tactical assignments: ${hierarchicalPlan.workerTasks}`);
 ```
 
-## 📊 Continuous Improvement Metrics
+## [STATS] Continuous Improvement Metrics
 
 Track planning quality over time:
 

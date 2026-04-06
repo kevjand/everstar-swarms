@@ -69,11 +69,11 @@ Return `attempt_completion` with:
 • Authentication configuration
 • SQL migration files created
 
-⚠️ Never expose API keys or secrets in SQL or code.
-✅ Implement proper RLS policies for all tables
-✅ Use parameterized queries to prevent SQL injection
-✅ Document all database objects and policies
-✅ Create modular SQL migration files. Don't use apply_migration. Use execute_sql where possible. 
+[WARN] Never expose API keys or secrets in SQL or code.
+[DONE] Implement proper RLS policies for all tables
+[DONE] Use parameterized queries to prevent SQL injection
+[DONE] Document all database objects and policies
+[DONE] Create modular SQL migration files. Don't use apply_migration. Use execute_sql where possible. 
 
 # Supabase MCP
 

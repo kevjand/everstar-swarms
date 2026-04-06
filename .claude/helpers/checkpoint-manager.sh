@@ -46,7 +46,7 @@ EOF
 
 # List all checkpoints
 function list_checkpoints() {
-    echo -e "${BLUE}📋 Available Checkpoints:${NC}"
+    echo -e "${BLUE}[TASK] Available Checkpoints:${NC}"
     echo ""
     
     # List checkpoint tags
@@ -102,7 +102,7 @@ function show_checkpoint() {
         echo -e "${YELLOW}Latest commit:${NC}"
         git log -1 --oneline "$checkpoint_id"
     else
-        echo -e "${RED}❌ Checkpoint not found: $checkpoint_id${NC}"
+        echo -e "${RED}[ERROR] Checkpoint not found: $checkpoint_id${NC}"
         exit 1
     fi
 }
@@ -118,7 +118,7 @@ function rollback_checkpoint() {
     # Verify checkpoint exists
     if ! git tag -l "$checkpoint_id" | grep -q "$checkpoint_id" && \
        ! git branch -a | grep -q "$checkpoint_id"; then
-        echo -e "${RED}❌ Checkpoint not found: $checkpoint_id${NC}"
+        echo -e "${RED}[ERROR] Checkpoint not found: $checkpoint_id${NC}"
         exit 1
     fi
     
@@ -129,21 +129,21 @@ function rollback_checkpoint() {
     
     case "$mode" in
         "--hard")
-            echo -e "${RED}⚠️  Performing hard reset (destructive)${NC}"
+            echo -e "${RED}[WARN]  Performing hard reset (destructive)${NC}"
             git reset --hard "$checkpoint_id"
-            echo -e "${GREEN}✅ Rolled back to $checkpoint_id (hard reset)${NC}"
+            echo -e "${GREEN}[DONE] Rolled back to $checkpoint_id (hard reset)${NC}"
             ;;
         "--branch")
             local branch_name="rollback-$checkpoint_id-$(date +%Y%m%d-%H%M%S)"
             echo "Creating new branch: $branch_name"
             git checkout -b "$branch_name" "$checkpoint_id"
-            echo -e "${GREEN}✅ Created branch $branch_name from $checkpoint_id${NC}"
+            echo -e "${GREEN}[DONE] Created branch $branch_name from $checkpoint_id${NC}"
             ;;
         "--stash"|*)
             echo "Stashing current changes..."
             git stash push -m "Stash before rollback to $checkpoint_id"
             git reset --soft "$checkpoint_id"
-            echo -e "${GREEN}✅ Rolled back to $checkpoint_id (soft reset)${NC}"
+            echo -e "${GREEN}[DONE] Rolled back to $checkpoint_id (soft reset)${NC}"
             echo "Your changes are stashed. Use 'git stash pop' to restore them."
             ;;
     esac
@@ -153,7 +153,7 @@ function rollback_checkpoint() {
 function diff_checkpoint() {
     local checkpoint_id="$1"
     
-    echo -e "${BLUE}📊 Changes since checkpoint: $checkpoint_id${NC}"
+    echo -e "${BLUE}[STATS] Changes since checkpoint: $checkpoint_id${NC}"
     echo ""
     
     if git tag -l "$checkpoint_id" | grep -q "$checkpoint_id"; then
@@ -161,7 +161,7 @@ function diff_checkpoint() {
     elif git branch -a | grep -q "$checkpoint_id"; then
         git diff "$checkpoint_id"
     else
-        echo -e "${RED}❌ Checkpoint not found: $checkpoint_id${NC}"
+        echo -e "${RED}[ERROR] Checkpoint not found: $checkpoint_id${NC}"
         exit 1
     fi
 }
@@ -170,13 +170,13 @@ function diff_checkpoint() {
 function clean_checkpoints() {
     local days=${1:-7}
     
-    echo -e "${YELLOW}🧹 Cleaning checkpoints older than $days days...${NC}"
+    echo -e "${YELLOW}[CLEAN] Cleaning checkpoints older than $days days...${NC}"
     echo ""
     
     # Clean old checkpoint files
     if [ -d "$CHECKPOINT_DIR" ]; then
         find "$CHECKPOINT_DIR" -name "*.json" -type f -mtime +$days -delete
-        echo "✅ Cleaned old checkpoint files"
+        echo "[DONE] Cleaned old checkpoint files"
     fi
     
     # List old tags (but don't delete automatically)
@@ -187,7 +187,7 @@ function clean_checkpoints() {
 
 # Show session summary
 function show_summary() {
-    echo -e "${BLUE}📊 Session Summary${NC}"
+    echo -e "${BLUE}[STATS] Session Summary${NC}"
     echo ""
     
     # Find most recent session summary

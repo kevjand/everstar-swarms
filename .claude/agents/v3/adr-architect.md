@@ -18,15 +18,15 @@ priority: high
 adr_template: madr
 hooks:
   pre: |
-    echo "📋 ADR Architect analyzing architectural decisions"
+    echo "[TASK] ADR Architect analyzing architectural decisions"
     # Search for related ADRs
     mcp__claude-flow__memory_search --pattern="adr:*" --namespace="decisions" --limit=10
     # Load project ADR context
     if [ -d "docs/adr" ] || [ -d "docs/decisions" ]; then
-      echo "📁 Found existing ADR directory"
+      echo "[DIR] Found existing ADR directory"
     fi
   post: |
-    echo "✅ ADR documentation complete"
+    echo "[DONE] ADR documentation complete"
     # Store new ADR in memory
     mcp__claude-flow__memory_usage --action="store" --namespace="decisions" --key="adr:$ADR_NUMBER" --value="$ADR_TITLE"
     # Train pattern on successful decision

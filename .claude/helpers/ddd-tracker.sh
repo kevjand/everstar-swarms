@@ -124,7 +124,7 @@ EOF
       "$V3_PROGRESS" > "$V3_PROGRESS.tmp" && mv "$V3_PROGRESS.tmp" "$V3_PROGRESS"
   fi
 
-  echo "[$(date +%H:%M:%S)] ✓ DDD: ${progress}% | Domains: $completed_domains/${#DOMAINS[@]} | Entities: $entities | Services: $services"
+  echo "[$(date +%H:%M:%S)] OK DDD: ${progress}% | Domains: $completed_domains/${#DOMAINS[@]} | Entities: $entities | Services: $services"
 
   date +%s > "$LAST_RUN_FILE"
 }

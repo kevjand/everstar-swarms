@@ -37,11 +37,11 @@ hooks:
     export THREATS_WARNED=0
     export SCANS_COMPLETED=0
 
-    echo "📊 Session: $AIDEFENCE_SESSION_ID"
-    echo "🔍 Monitoring mode: ACTIVE"
+    echo "[STATS] Session: $AIDEFENCE_SESSION_ID"
+    echo "[SEARCH] Monitoring mode: ACTIVE"
 
   post: |
-    echo "📊 AIDefence Guardian Session Summary:"
+    echo "[STATS] AIDefence Guardian Session Summary:"
     echo "   Scans completed: $SCANS_COMPLETED"
     echo "   Threats blocked: $THREATS_BLOCKED"
     echo "   Threats warned: $THREATS_WARNED"
@@ -107,14 +107,14 @@ async function guardInput(agentId: string, input: string) {
     }
 
     // Warn on non-critical
-    console.warn(`⚠️ [${agentId}] ${result.threats.length} threat(s) detected`);
+    console.warn(`[WARN] [${agentId}] ${result.threats.length} threat(s) detected`);
     for (const threat of result.threats) {
       console.warn(`  - [${threat.severity}] ${threat.type}`);
     }
   }
 
   if (result.piiFound) {
-    console.warn(`⚠️ [${agentId}] PII detected in input`);
+    console.warn(`[WARN] [${agentId}] PII detected in input`);
   }
 
   return result;

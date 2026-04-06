@@ -46,11 +46,11 @@ Hooks are configured in `.claude/settings.json`:
 ```
 
 ## Benefits
-- 🤖 Automatic agent assignment based on file type
+- [BOT] Automatic agent assignment based on file type
 - 🎨 Consistent code formatting
 - 🧠 Continuous neural pattern improvement
 - 💾 Cross-session memory persistence
-- 📊 Performance metrics tracking
+- [STATS] Performance metrics tracking
 
 ## See Also
 - [Pre-Edit Hook](./pre-edit.md)

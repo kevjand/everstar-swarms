@@ -21,7 +21,7 @@ npx ruv-swarm github review-init \
   --depth comprehensive
 
 # Post initial review status
-gh pr comment 123 --body "🔍 Multi-agent code review initiated"
+gh pr comment 123 --body "[SEARCH] Multi-agent code review initiated"
 ```
 
 ### 2. Specialized Review Agents

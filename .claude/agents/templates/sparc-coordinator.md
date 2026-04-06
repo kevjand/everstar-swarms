@@ -46,7 +46,7 @@ hooks:
       --status "started" 2>/dev/null || true
 
   post: |
-    echo "✅ SPARC coordination phase complete"
+    echo "[DONE] SPARC coordination phase complete"
 
     # 1. Collect metrics from all SPARC phases
     SPEC_SUCCESS=$(memory_search "spec_complete" | grep -q "learning" && echo "true" || echo "false")
@@ -92,7 +92,7 @@ hooks:
     fi
 
     memory_store "sparc_coord_complete_$(date +%s)" "SPARC methodology phases coordinated with learning ($SUCCESS_COUNT/$PHASE_COUNT successful)"
-    echo "📊 Phase progress tracked in memory with learning metrics"
+    echo "[STATS] Phase progress tracked in memory with learning metrics"
 ---
 
 # SPARC Methodology Orchestrator Agent
@@ -131,7 +131,7 @@ const failedCycles = await reasoningBank.searchPatterns({
 });
 
 if (failedCycles.length > 0) {
-  console.log('⚠️  Avoiding past SPARC methodology mistakes:');
+  console.log('[WARN]  Avoiding past SPARC methodology mistakes:');
   failedCycles.forEach(pattern => {
     console.log(`- ${pattern.critique}`);
     // Prevent phase skipping
@@ -320,7 +320,7 @@ console.log(`Cross-phase patterns identified: ${crossPhaseLearning.consensus}`);
 const improvements = extractImprovements(crossPhaseLearning);
 ```
 
-## 📊 SPARC Cycle Improvement Tracking
+## [STATS] SPARC Cycle Improvement Tracking
 
 ```typescript
 // Track methodology improvement over time

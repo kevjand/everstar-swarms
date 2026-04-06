@@ -103,7 +103,7 @@ run_benchmarks() {
         ."last-updated" = $updated' \
        "$PERF_FILE" > "$PERF_FILE.tmp" && mv "$PERF_FILE.tmp" "$PERF_FILE"
 
-    echo "[$(date +%H:%M:%S)] ✓ Metrics updated: search=$search_speed memory=$memory_reduction startup=$startup_time"
+    echo "[$(date +%H:%M:%S)] OK Metrics updated: search=$search_speed memory=$memory_reduction startup=$startup_time"
   else
     echo "[$(date +%H:%M:%S)] ⚠ Could not update metrics (missing jq or file)"
   fi

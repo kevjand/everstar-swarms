@@ -226,12 +226,12 @@ mcp__claude-flow__swarm_init({
   // Create coordinated PR
   Bash(`gh pr create \
     --title "Feature: GitHub Workflow Integration" \
-    --body "## 🚀 GitHub Integration
+    --body "## > GitHub Integration
 
 ### Features
-- ✅ Multi-repo coordination
-- ✅ Package synchronization
-- ✅ Architecture optimization
+- [DONE] Multi-repo coordination
+- [DONE] Package synchronization
+- [DONE] Architecture optimization
 
 ### Testing
 - [x] Package dependency verification
@@ -396,7 +396,7 @@ Part of #$TRACKING_ISSUE"
         --label "dependencies"
     else
       gh issue comment $TRACKING_ISSUE \
-        --body "❌ Failed to update $repo - tests failing"
+        --body "[ERROR] Failed to update $repo - tests failing"
     fi
   done`)
 ```

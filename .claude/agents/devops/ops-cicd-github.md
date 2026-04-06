@@ -97,17 +97,17 @@ hooks:
     echo "🔧 GitHub CI/CD Pipeline Engineer starting..."
     echo "📂 Checking existing workflows..."
     find .github/workflows -name "*.yml" -o -name "*.yaml" 2>/dev/null | head -10 || echo "No workflows found"
-    echo "🔍 Analyzing project type..."
+    echo "[SEARCH] Analyzing project type..."
     test -f package.json && echo "Node.js project detected"
     test -f requirements.txt && echo "Python project detected"
     test -f go.mod && echo "Go project detected"
   post_execution: |
-    echo "✅ CI/CD pipeline configuration completed"
+    echo "[DONE] CI/CD pipeline configuration completed"
     echo "🧐 Validating workflow syntax..."
     # Simple YAML validation
     find .github/workflows -name "*.yml" -o -name "*.yaml" | xargs -I {} sh -c 'echo "Checking {}" && cat {} | head -1'
   on_error: |
-    echo "❌ Pipeline configuration error: {{error_message}}"
+    echo "[ERROR] Pipeline configuration error: {{error_message}}"
     echo "📝 Check GitHub Actions documentation for syntax"
 examples:
   - trigger: "create GitHub Actions CI/CD pipeline for Node.js app"

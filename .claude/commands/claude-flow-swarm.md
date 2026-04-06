@@ -21,7 +21,7 @@ Advanced multi-agent coordination system with timeout-free execution, distribute
 - **optimization** - Performance tuning and refactoring
 - **maintenance** - System updates and bug fixes
 
-## 🤖 Agent Types
+## [BOT] Agent Types
 - **coordinator** - Plans and delegates tasks to other agents
 - **developer** - Writes code and implements solutions
 - **researcher** - Gathers and analyzes information
@@ -107,7 +107,7 @@ Advanced multi-agent coordination system with timeout-free execution, distribute
   --max-agents 6
 ```
 
-## 📊 Monitoring and Control
+## [STATS] Monitoring and Control
 
 ### Real-time monitoring:
 ```bash

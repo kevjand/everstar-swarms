@@ -4,7 +4,7 @@
 
 set -e
 
-echo "🔍 Claude Flow V3 Configuration Validation"
+echo "[SEARCH] Claude Flow V3 Configuration Validation"
 echo "==========================================="
 echo ""
 
@@ -20,25 +20,25 @@ RESET='\033[0m'
 
 # Helper functions
 log_error() {
-  echo -e "${RED}❌ ERROR: $1${RESET}"
+  echo -e "${RED}[ERROR] ERROR: $1${RESET}"
   ((ERRORS++))
 }
 
 log_warning() {
-  echo -e "${YELLOW}⚠️  WARNING: $1${RESET}"
+  echo -e "${YELLOW}[WARN]  WARNING: $1${RESET}"
   ((WARNINGS++))
 }
 
 log_success() {
-  echo -e "${GREEN}✅ $1${RESET}"
+  echo -e "${GREEN}[DONE] $1${RESET}"
 }
 
 log_info() {
-  echo -e "${BLUE}ℹ️  $1${RESET}"
+  echo -e "${BLUE}[INFO]  $1${RESET}"
 }
 
 # Check 1: Required directories
-echo "📁 Checking Directory Structure..."
+echo "[DIR] Checking Directory Structure..."
 required_dirs=(
   ".claude"
   ".claude/helpers"
@@ -197,19 +197,19 @@ done
 
 # Summary
 echo ""
-echo "📊 Validation Summary"
+echo "[STATS] Validation Summary"
 echo "===================="
 if [ $ERRORS -eq 0 ] && [ $WARNINGS -eq 0 ]; then
   log_success "All checks passed! V3 development environment is ready."
   exit 0
 elif [ $ERRORS -eq 0 ]; then
-  echo -e "${YELLOW}⚠️  $WARNINGS warnings found, but no critical errors.${RESET}"
+  echo -e "${YELLOW}[WARN]  $WARNINGS warnings found, but no critical errors.${RESET}"
   log_info "V3 development can proceed with minor issues to address."
   exit 0
 else
-  echo -e "${RED}❌ $ERRORS critical errors found.${RESET}"
+  echo -e "${RED}[ERROR] $ERRORS critical errors found.${RESET}"
   if [ $WARNINGS -gt 0 ]; then
-    echo -e "${YELLOW}⚠️  $WARNINGS warnings also found.${RESET}"
+    echo -e "${YELLOW}[WARN]  $WARNINGS warnings also found.${RESET}"
   fi
   log_error "Please fix critical errors before proceeding with V3 development."
   exit 1

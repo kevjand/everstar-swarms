@@ -54,7 +54,7 @@ hooks:
     # ═══════════════════════════════════════════════════════════════
     # PHASE 1: AIMDS Real-Time Threat Scan
     # ═══════════════════════════════════════════════════════════════
-    echo "🔍 Running AIMDS threat detection on task input..."
+    echo "[SEARCH] Running AIMDS threat detection on task input..."
 
     # Scan task for prompt injection/manipulation attempts
     AIMDS_RESULT=$(npx claude-flow@v3alpha security defend --input "$TASK" --mode thorough --json 2>/dev/null)
@@ -64,7 +64,7 @@ hooks:
       CRITICAL_COUNT=$(echo "$AIMDS_RESULT" | jq -r '.threats | map(select(.severity == "critical")) | length' 2>/dev/null || echo "0")
 
       if [ "$THREAT_COUNT" -gt 0 ]; then
-        echo "⚠️  AIMDS detected $THREAT_COUNT potential threat(s):"
+        echo "[WARN]  AIMDS detected $THREAT_COUNT potential threat(s):"
         echo "$AIMDS_RESULT" | jq -r '.threats[] | "  - [\(.severity)] \(.type): \(.description)"' 2>/dev/null
 
         if [ "$CRITICAL_COUNT" -gt 0 ]; then
@@ -72,19 +72,19 @@ hooks:
           echo "   Proceeding with enhanced security protocols..."
         fi
       else
-        echo "✅ AIMDS: No manipulation attempts detected"
+        echo "[DONE] AIMDS: No manipulation attempts detected"
       fi
     fi
 
     # ═══════════════════════════════════════════════════════════════
     # PHASE 2: HNSW Threat Pattern Search
     # ═══════════════════════════════════════════════════════════════
-    echo "📊 Searching for similar threat patterns via HNSW..."
+    echo "[STATS] Searching for similar threat patterns via HNSW..."
 
     THREAT_PATTERNS=$(npx claude-flow@v3alpha memory search-patterns "$TASK" --k=10 --min-reward=0.85 --namespace=security_threats 2>/dev/null)
     if [ -n "$THREAT_PATTERNS" ]; then
       PATTERN_COUNT=$(echo "$THREAT_PATTERNS" | jq -r 'length' 2>/dev/null || echo "0")
-      echo "📊 Found $PATTERN_COUNT similar threat patterns (150x-12,500x faster via HNSW)"
+      echo "[STATS] Found $PATTERN_COUNT similar threat patterns (150x-12,500x faster via HNSW)"
       npx claude-flow@v3alpha memory get-pattern-stats "$TASK" --k=10 --namespace=security_threats 2>/dev/null
     fi
 
@@ -93,7 +93,7 @@ hooks:
     # ═══════════════════════════════════════════════════════════════
     SECURITY_FAILURES=$(npx claude-flow@v3alpha memory search-patterns "$TASK" --only-failures --k=5 --namespace=security 2>/dev/null)
     if [ -n "$SECURITY_FAILURES" ]; then
-      echo "⚠️  Learning from past security vulnerabilities..."
+      echo "[WARN]  Learning from past security vulnerabilities..."
       echo "$SECURITY_FAILURES" | jq -r '.[] | "  - \(.task): \(.critique)"' 2>/dev/null | head -5
     fi
 
@@ -102,7 +102,7 @@ hooks:
     # ═══════════════════════════════════════════════════════════════
     if [[ "$TASK" == *"auth"* ]] || [[ "$TASK" == *"session"* ]] || [[ "$TASK" == *"inject"* ]] || \
        [[ "$TASK" == *"password"* ]] || [[ "$TASK" == *"token"* ]] || [[ "$TASK" == *"crypt"* ]]; then
-      echo "🔍 Checking CVE database for relevant vulnerabilities..."
+      echo "[SEARCH] Checking CVE database for relevant vulnerabilities..."
       npx claude-flow@v3alpha security cve --check-relevant "$TASK" 2>/dev/null
     fi
 
@@ -133,7 +133,7 @@ hooks:
     export AIMDS_THREAT_COUNT="$THREAT_COUNT"
 
   post: |
-    echo "✅ Security architecture analysis complete (AIMDS Enhanced)"
+    echo "[DONE] Security architecture analysis complete (AIMDS Enhanced)"
 
     # ═══════════════════════════════════════════════════════════════
     # PHASE 1: Comprehensive Security Validation
@@ -145,7 +145,7 @@ hooks:
     CRITICAL_COUNT=$(jq -r '.vulnerabilities | map(select(.severity == "critical")) | length' /tmp/security-scan.json 2>/dev/null || echo "0")
     HIGH_COUNT=$(jq -r '.vulnerabilities | map(select(.severity == "high")) | length' /tmp/security-scan.json 2>/dev/null || echo "0")
 
-    echo "📊 Vulnerability Summary:"
+    echo "[STATS] Vulnerability Summary:"
     echo "   Total: $VULNERABILITIES"
     echo "   Critical: $CRITICAL_COUNT"
     echo "   High: $HIGH_COUNT"
@@ -170,7 +170,7 @@ hooks:
 
         # Alert on high anomaly
         if [ "$(echo "$ANOMALY_SCORE > 0.8" | bc 2>/dev/null)" = "1" ]; then
-          echo "⚠️  High anomaly score detected - flagging for review"
+          echo "[WARN]  High anomaly score detected - flagging for review"
           npx claude-flow@v3alpha hooks notify --severity warning \
             --message "High behavioral anomaly detected: score=$ANOMALY_SCORE" 2>/dev/null
         fi
@@ -258,12 +258,12 @@ hooks:
         --message "AIMDS: $CRITICAL_COUNT critical security vulnerabilities found" \
         2>/dev/null
     elif [ "$HIGH_COUNT" -gt 5 ]; then
-      echo "⚠️  WARNING: $HIGH_COUNT high-severity vulnerabilities detected"
+      echo "[WARN]  WARNING: $HIGH_COUNT high-severity vulnerabilities detected"
       npx claude-flow@v3alpha hooks notify --severity warning \
         --message "AIMDS: $HIGH_COUNT high-severity vulnerabilities found" \
         2>/dev/null
     else
-      echo "✅ Security assessment completed successfully"
+      echo "[DONE] Security assessment completed successfully"
     fi
 ---
 

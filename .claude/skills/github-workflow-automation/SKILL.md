@@ -31,7 +31,7 @@ This skill provides comprehensive GitHub Actions automation with AI swarm coordi
 ## Quick Start
 
 <details>
-<summary>💡 Basic Usage - Click to expand</summary>
+<summary>[INFO] Basic Usage - Click to expand</summary>
 
 ### Initialize GitHub Workflow Automation
 ```bash
@@ -59,7 +59,7 @@ gh run view <run-id> --json jobs,conclusion | \
 
 ## Core Capabilities
 
-### 🤖 Swarm-Powered GitHub Modes
+### [BOT] Swarm-Powered GitHub Modes
 
 <details>
 <summary>Available GitHub Integration Modes</summary>
@@ -364,7 +364,7 @@ jobs:
 
 </details>
 
-### 📊 Monitoring & Analytics
+### [STATS] Monitoring & Analytics
 
 <details>
 <summary>Workflow Analysis & Optimization</summary>
@@ -809,7 +809,7 @@ npx ruv-swarm actions analyze-logs \
 
 ## Real-World Examples
 
-### 🚀 Complete Workflows
+### > Complete Workflows
 
 <details>
 <summary>Production-Ready Integration Examples</summary>
@@ -997,7 +997,7 @@ npx ruv-swarm actions analytics [options]
 
 ## Integration Checklist
 
-### ✅ Setup Verification
+### [DONE] Setup Verification
 
 <details>
 <summary>Verify Your Setup</summary>
@@ -1030,7 +1030,7 @@ npx ruv-swarm actions generate-workflow \
   --analyze-codebase \
   --create-optimal-pipeline > .github/workflows/ci.yml
 
-echo "✅ GitHub workflow automation setup complete"
+echo "[DONE] GitHub workflow automation setup complete"
 ```
 
 </details>
@@ -1060,6 +1060,6 @@ echo "✅ GitHub workflow automation setup complete"
 
 ---
 
-**Skill Status**: ✅ Production Ready
+**Skill Status**: [DONE] Production Ready
 **Last Updated**: 2025-01-19
 **Maintainer**: claude-flow team

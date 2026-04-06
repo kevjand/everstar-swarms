@@ -98,7 +98,7 @@ optimization:
 hooks:
   pre_execution: |
     echo "📝 OpenAPI Documentation Specialist starting..."
-    echo "🔍 Analyzing API endpoints..."
+    echo "[SEARCH] Analyzing API endpoints..."
     # Look for existing API routes
     find . -name "*.route.js" -o -name "*.controller.js" -o -name "routes.js" | grep -v node_modules | head -10
     # Check for existing OpenAPI docs
@@ -120,8 +120,8 @@ hooks:
       --status "started" 2>/dev/null || true
 
   post_execution: |
-    echo "✅ API documentation completed"
-    echo "📊 Validating OpenAPI specification..."
+    echo "[DONE] API documentation completed"
+    echo "[STATS] Validating OpenAPI specification..."
     # Check if the spec exists and show basic info
     if [ -f "openapi.yaml" ]; then
       echo "OpenAPI spec found at openapi.yaml"
@@ -153,7 +153,7 @@ hooks:
     fi
 
   on_error: |
-    echo "⚠️ Documentation error: {{error_message}}"
+    echo "[WARN] Documentation error: {{error_message}}"
     echo "🔧 Check OpenAPI specification syntax"
 
     # Store failure pattern

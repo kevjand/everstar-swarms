@@ -1,38 +1,71 @@
 #!/bin/bash
 # Everstar CLI - Send prompt directly to Claude CLI
-# Usage: ./everstar-cli.sh ENG-XXXX [USER_PREFIX]
+# Usage: ./everstar-cli.sh ENG-XXXX [USER_PREFIX] [--interactive]
 # Requires: claude CLI running or will start it
 
 set -e
 
-TICKET_ID=$1
-USER_PREFIX=${2:-"auto"}  # Default to "auto" if not provided (e.g., kevjand/ENG-4214)
+# Load environment variables from .env if it exists
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/../.env" ]; then
+    source "$SCRIPT_DIR/../.env"
+fi
+
+# Parse arguments
+INTERACTIVE_MODE=false
+TICKET_ID=""
+USER_PREFIX=""
+
+for arg in "$@"; do
+    case $arg in
+        --interactive|-i)
+            INTERACTIVE_MODE=true
+            shift
+            ;;
+        *)
+            if [ -z "$TICKET_ID" ]; then
+                TICKET_ID=$arg
+            elif [ -z "$USER_PREFIX" ]; then
+                USER_PREFIX=$arg
+            fi
+            ;;
+    esac
+done
+
+# Set defaults
+USER_PREFIX=${USER_PREFIX:-${USER_PREFIX:-"auto"}}  # CLI arg > .env > "auto"
 
 # Auto-detect everstar repo location (works for any team member)
 if [ -z "$EVERSTAR_REPO" ]; then
     # Try common locations
     if [ -d "$HOME/everstar/everstar" ]; then
-        EVERSTAR_REPO="$HOME/everstar/everstar"
+        EVERSTAR_REPO="/Users/kevinandrade/Desktop/everstar/everstar"
     elif [ -d "$HOME/Desktop/everstar/everstar" ]; then
-        EVERSTAR_REPO="$HOME/Desktop/everstar/everstar"
+        EVERSTAR_REPO="/Users/kevinandrade/Desktop/everstar/everstar"
     elif [ -d "$HOME/workspace/everstar" ]; then
-        EVERSTAR_REPO="$HOME/workspace/everstar"
+        EVERSTAR_REPO="/Users/kevinandrade/Desktop/everstar/everstar"
     else
-        echo "❌ Cannot find everstar repo. Set EVERSTAR_REPO env variable:"
-        echo "   export EVERSTAR_REPO=/path/to/everstar"
+        echo "[ERROR] Cannot find everstar repo. Set EVERSTAR_REPO env variable in .env:"
+        echo "   echo 'EVERSTAR_REPO=/path/to/everstar' >> .env"
         exit 1
     fi
 fi
 
-echo "📁 Everstar repo: $EVERSTAR_REPO"
+echo "[DIR] Everstar repo: $EVERSTAR_REPO"
 
 if [ -z "$TICKET_ID" ]; then
-    echo "Usage: ./everstar-cli.sh ENG-XXXX [USER_PREFIX]"
-    echo "Example: ./everstar-cli.sh ENG-4214 kevjand"
+    echo "Usage: ./everstar-cli.sh ENG-XXXX [USER_PREFIX] [--interactive]"
+    echo ""
+    echo "Examples:"
+    echo "  ./everstar-cli.sh ENG-4214 kevjand              # Full automation"
+    echo "  ./everstar-cli.sh ENG-4214 kevjand --interactive # Approval required between phases"
+    echo ""
+    echo "Flags:"
+    echo "  --interactive, -i    Require approval at the end of each phase (0,1,2,3)"
     exit 1
 fi
 
-echo "🚀 Processing ticket $TICKET_ID via Claude CLI..."
+echo "> Processing ticket $TICKET_ID via Claude CLI..."
 
 # 1. Prep main repo
 cd "$EVERSTAR_REPO"
@@ -44,7 +77,7 @@ WORKTREE_PATH="/tmp/everstar-worktrees/$BRANCH"
 
 # Clean up old worktree if exists
 if [ -d "$WORKTREE_PATH" ]; then
-    echo "⚠️  Cleaning up existing worktree..."
+    echo "[WARN]  Cleaning up existing worktree..."
     git worktree remove "$WORKTREE_PATH" --force 2>/dev/null || true
 fi
 
@@ -54,24 +87,24 @@ git worktree add -b "$BRANCH" "$WORKTREE_PATH" origin/dev 2>/dev/null || \
 git worktree add "$WORKTREE_PATH" "$BRANCH" 2>/dev/null
 
 cd "$WORKTREE_PATH"
-echo "✓ Worktree: $WORKTREE_PATH"
-echo "✓ Branch: $BRANCH"
+echo "OK Worktree: $WORKTREE_PATH"
+echo "OK Branch: $BRANCH"
 
 # 3. Initialize swarm
 npx @claude-flow/cli@latest swarm init --topology hierarchical --max-agents 8 > /dev/null 2>&1
-echo "✓ Swarm initialized"
+echo "OK Swarm initialized"
 
 # 4. Initialize hive-mind
-echo "✓ Initializing hive-mind..."
+echo "OK Initializing hive-mind..."
 npx @claude-flow/cli@latest hive-mind init \
   --objective "Implement Linear ticket $TICKET_ID" \
   --workers 6 \
   --consensus byzantine \
   --topology hierarchical-mesh > /dev/null 2>&1
-echo "✓ Hive-mind initialized"
+echo "OK Hive-mind initialized"
 
 # 5. Create prompt for Claude Code to execute within Ruflo framework
-echo "✓ Preparing execution..."
+echo "OK Preparing execution..."
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  Worktree: $WORKTREE_PATH"
@@ -79,8 +112,38 @@ echo "  Branch: $BRANCH"
 echo "  Ticket: $TICKET_ID"
 echo "  Ruflo Swarm: READY"
 echo "  Hive-Mind: INITIALIZED"
+if [ "$INTERACTIVE_MODE" = true ]; then
+    echo "  Mode: INTERACTIVE (approval required between phases)"
+else
+    echo "  Mode: AUTONOMOUS (fully automated)"
+fi
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
+
+# Create interactive mode instructions
+INTERACTIVE_INSTRUCTIONS=""
+if [ "$INTERACTIVE_MODE" = true ]; then
+    INTERACTIVE_INSTRUCTIONS="
+INTERACTIVE MODE: ENABLED
+
+After completing each phase (0, 1, 2, 3), you MUST:
+1. Summarize what was accomplished in the phase
+2. Show key findings, decisions, or concerns
+3. Use AskUserQuestion tool to ask: \"Proceed to next phase?\" with options:
+   - \"Continue\" (proceed to next phase)
+   - \"Stop\" (halt automation, keep worktree for manual inspection)
+   - \"Skip to Phase X\" (jump to specific phase)
+4. Wait for user response before proceeding
+
+Do NOT proceed automatically between phases in interactive mode.
+"
+else
+    INTERACTIVE_INSTRUCTIONS="
+AUTONOMOUS MODE: ENABLED
+
+Execute all 4 phases automatically without pausing for approval. Only stop if critical errors occur.
+"
+fi
 
 # Create prompt for Claude Code with fully autonomous 3-phase approach
 PROMPT="RUFLO TICKET EXECUTION BOT - $TICKET_ID
@@ -89,8 +152,9 @@ Worktree: $WORKTREE_PATH
 Branch: $BRANCH
 Ruflo Swarm: INITIALIZED (hierarchical, 8 agents max)
 Hive-Mind: READY (Byzantine consensus, hierarchical-mesh)
+$INTERACTIVE_INSTRUCTIONS
 
-TASK: Execute ticket $TICKET_ID using FULLY AUTONOMOUS 4-PHASE approach with ticket enrichment and automated plan validation.
+TASK: Execute ticket $TICKET_ID using 4-PHASE approach with ticket enrichment and automated plan validation.
 
 CRITICAL: You are working in a git worktree at $WORKTREE_PATH (isolated from main repo).
 
@@ -194,20 +258,20 @@ ALL AGENTS MUST:
    Agent(subagent_type: reviewer, run_in_background: true)
 
    Plan-reviewer validates the plan against .claude/ticket-bot-standards.md:
-   - ✓ All requirements from ticket are addressed
-   - ✓ Edge cases identified and handled
-   - ✓ Test strategy meets 85%+ coverage requirement
-   - ✓ Security considerations included
-   - ✓ Architecture decisions have clear rationale
-   - ✓ Implementation steps are clear and sequenced
-   - ✓ Risk assessment and mitigation included
+   - OK All requirements from ticket are addressed
+   - OK Edge cases identified and handled
+   - OK Test strategy meets 85%+ coverage requirement
+   - OK Security considerations included
+   - OK Architecture decisions have clear rationale
+   - OK Implementation steps are clear and sequenced
+   - OK Risk assessment and mitigation included
 
    If ANY validation fails, plan-reviewer provides specific feedback and requests plan revision.
    Only proceed to Phase 3 if plan-reviewer approves with \"PLAN APPROVED\".
 
 ==== PHASE 3: EXECUTION (AFTER AUTOMATED APPROVAL) ====
 
-5. After plan-reviewer approval, spawn 5 execution agents in ONE message (run_in_background: true):
+5. After plan-reviewer approval, spawn 6 execution agents in ONE message (run_in_background: true):
 
    ALL AGENTS MUST FIRST: Read $WORKTREE_PATH/CLAUDE.md and follow ALL project-specific rules
 
@@ -216,31 +280,39 @@ ALL AGENTS MUST:
    - tester: Read CLAUDE.md first, then write tests per project testing conventions, >85% coverage, edge cases, integration tests
    - security-auditor: Vulnerability scan, input validation, no secrets, check against CLAUDE.md security rules
    - reviewer: Verify CLAUDE.md compliance (project-specific conventions, quality gates from ticket-bot-standards.md)
+   - pr-manager: WAIT for other 5 agents to complete, then run quality gates, commit, push, and create PR
 
-6. QUALITY GATES - Must pass before commit:
-   - All tests passing (pytest with 85%+ coverage)
-   - Linting passing (npm run lint, zero warnings)
-   - CLAUDE.md compliant (verified by reviewer agent)
-   - Security scan clean
-   - No TODO/FIXME comments
-   - No new markdown documentation files created (code is the documentation)
+6. The pr-manager agent is responsible for the ENTIRE final workflow (do NOT do this work yourself):
+   - Waits for all other agents to finish (you will be notified when they complete)
+   - Runs quality gates: pytest (quick check of new tests), ruff linting, verify no TODO/FIXME
+   - If security auditor found CRITICAL issues, pr-manager should evaluate if they are blocking or can be addressed in follow-up
+   - Stages all changes: git add -A
+   - Creates commit with lowercase format: eng-XXXX: [description] with details and Co-Authored-By: claude-flow
+   - Pushes to remote: git push origin $BRANCH
+   - Creates PR: gh pr create --base dev --head $BRANCH with comprehensive title and body
+   - Reports final status (PR URL, commit hash, files changed)
 
-7. Final steps: commit (lowercase format), push to origin/$BRANCH, create PR
+7. Your role as orchestrator:
+   - Spawn all 6 agents in Phase 3 (ONE message, all with run_in_background: true)
+   - Wait for agents to complete (you'll be notified automatically)
+   - Do NOT manually run quality gates, commits, or create PRs - let pr-manager handle everything
 
 FORBIDDEN: Do NOT create implementation markdown files (e.g., IMPLEMENTATION.md, CHANGES.md). The code, tests, and commit messages are the documentation.
 
-CRITICAL: This is FULLY AUTONOMOUS 4-PHASE workflow. No human intervention required.
+WORKFLOW PHASES:
 - Phase 0: Ticket analysis & conditional enrichment (score < 70)
 - Phase 1: Planning (uses enriched or original ticket)
 - Phase 2: Automated plan review
-- Phase 3: Execution with quality gates"
+- Phase 3: Execution with quality gates
 
-echo "🤖 Starting Claude Code execution..."
+Remember: $([ "$INTERACTIVE_MODE" = true ] && echo "INTERACTIVE MODE - Ask for approval between phases" || echo "AUTONOMOUS MODE - Execute all phases automatically")"
+
+echo "[BOT] Starting Claude Code execution..."
 echo ""
 
 # Check if claude CLI is available
 if ! command -v claude &> /dev/null; then
-    echo "❌ Claude CLI not found. Install: npm install -g @anthropic-ai/claude-code"
+    echo "[ERROR] Claude CLI not found. Install: npm install -g @anthropic-ai/claude-code"
     echo ""
     echo "Alternative: Paste this into your Claude Code session:"
     echo "──────────────────────────────────────"
@@ -257,12 +329,12 @@ cd "$WORKTREE_PATH"
     while ps aux | grep -q "[c]laude.*$TICKET_ID"; do
         clear
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo "  📋 Ticket: $TICKET_ID"
-        echo "  🌳 Branch: $BRANCH"
-        echo "  📁 Worktree: $WORKTREE_PATH"
+        echo "  [TASK] Ticket: $TICKET_ID"
+        echo "  [BRANCH] Branch: $BRANCH"
+        echo "  [DIR] Worktree: $WORKTREE_PATH"
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         echo ""
-        npx @claude-flow/cli@latest agent list 2>/dev/null || echo "  ⏳ Agents starting..."
+        npx @claude-flow/cli@latest agent list 2>/dev/null || echo "  [WAIT] Agents starting..."
         echo ""
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         sleep 5
@@ -278,30 +350,30 @@ kill $MONITOR_PID 2>/dev/null || true
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "✅ Execution complete!"
+echo "[DONE] Execution complete!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "  🌳 Branch: $BRANCH"
-echo "  📁 Worktree: $WORKTREE_PATH"
+echo "  [BRANCH] Branch: $BRANCH"
+echo "  [DIR] Worktree: $WORKTREE_PATH"
 echo ""
 
 # Check for changes
 if git diff-index --quiet HEAD --; then
-    echo "  ℹ️  No changes made"
+    echo "  [INFO]  No changes made"
     echo ""
-    echo "  🧹 Cleaning up worktree..."
+    echo "  [CLEAN] Cleaning up worktree..."
     cd "$EVERSTAR_REPO"
     git worktree remove "$WORKTREE_PATH" --force
 else
-    echo "  📊 Changes made:"
+    echo "  [STATS] Changes made:"
     git status --short
     echo ""
-    echo "  🔍 Recent commits:"
+    echo "  [SEARCH] Recent commits:"
     git log --oneline -3
     echo ""
-    echo "  ✨ PR created or ready for review"
+    echo "  [NEW] PR created or ready for review"
     echo ""
-    echo "  💡 To clean up worktree after PR merge:"
+    echo "  [INFO] To clean up worktree after PR merge:"
     echo "     cd $EVERSTAR_REPO && git worktree remove $WORKTREE_PATH"
 fi
 

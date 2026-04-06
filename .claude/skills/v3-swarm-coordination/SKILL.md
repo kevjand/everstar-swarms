@@ -42,7 +42,7 @@ Task("Performance validation", "Validate 2.49x-7.47x targets", "v3-performance-e
                              │
         ┌────────────────────┼────────────────────┐
         │                   │                    │
-   🧪 QUALITY          ⚡ PERFORMANCE        🚀 DEPLOYMENT
+   🧪 QUALITY          ⚡ PERFORMANCE        > DEPLOYMENT
    (Agent #13)         (Agent #14)          (Agent #15)
 ```
 

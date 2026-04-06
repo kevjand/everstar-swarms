@@ -20,7 +20,7 @@ DIM='\033[2m'
 RESET='\033[0m'
 
 log() { echo -e "${CYAN}[Learning] $1${RESET}"; }
-success() { echo -e "${GREEN}[Learning] ✓ $1${RESET}"; }
+success() { echo -e "${GREEN}[Learning] OK $1${RESET}"; }
 warn() { echo -e "${YELLOW}[Learning] ⚠ $1${RESET}"; }
 error() { echo -e "${RED}[Learning] ✗ $1${RESET}"; }
 

@@ -30,7 +30,7 @@ capabilities:
 gh pr view 123 --json files,diff | npx ruv-swarm github review-init --pr 123
 
 # Post review status
-gh pr comment 123 --body "🔍 Multi-agent code review initiated"
+gh pr comment 123 --body "[SEARCH] Multi-agent code review initiated"
 ```
 
 ### Complete Review Workflow
@@ -96,7 +96,7 @@ npx ruv-swarm github review-init \
 
 ---
 
-## 🚀 Core Features
+## > Core Features
 
 ### Multi-Agent Review System
 
@@ -116,18 +116,18 @@ npx ruv-swarm github review-init \
   --depth comprehensive
 
 # Post initial review status
-gh pr comment 123 --body "🔍 Multi-agent code review initiated"
+gh pr comment 123 --body "[SEARCH] Multi-agent code review initiated"
 ```
 
 **Benefits:**
-- ✅ Parallel review by specialized agents
-- ✅ Comprehensive coverage across multiple domains
-- ✅ Faster review cycles with coordinated analysis
-- ✅ Consistent quality standards enforcement
+- [DONE] Parallel review by specialized agents
+- [DONE] Comprehensive coverage across multiple domains
+- [DONE] Faster review cycles with coordinated analysis
+- [DONE] Consistent quality standards enforcement
 
 ---
 
-## 🤖 Specialized Review Agents
+## [BOT] Specialized Review Agents
 
 ### Security Review Agent
 
@@ -487,7 +487,7 @@ review:
 
 ---
 
-## 🤖 Automated Workflows
+## [BOT] Automated Workflows
 
 ### Auto-Review on PR Creation
 
@@ -823,7 +823,7 @@ fi
 
 ---
 
-## 📋 Complete Workflow Examples
+## [TASK] Complete Workflow Examples
 
 ### Example 1: Security-Critical PR
 
@@ -885,7 +885,7 @@ npx ruv-swarm github pr-init 789 \
 
 ---
 
-## 📊 Monitoring & Analytics
+## [STATS] Monitoring & Analytics
 
 ### Review Dashboard
 
@@ -954,22 +954,22 @@ npx ruv-swarm github export-metrics \
 ## 📚 Best Practices
 
 ### 1. Review Configuration
-- ✅ Define clear review criteria upfront
-- ✅ Set appropriate severity thresholds
-- ✅ Configure agent specializations for your stack
-- ✅ Establish override procedures for emergencies
+- [DONE] Define clear review criteria upfront
+- [DONE] Set appropriate severity thresholds
+- [DONE] Configure agent specializations for your stack
+- [DONE] Establish override procedures for emergencies
 
 ### 2. Comment Quality
-- ✅ Provide actionable, specific feedback
-- ✅ Include code examples with suggestions
-- ✅ Reference documentation and best practices
-- ✅ Maintain respectful, constructive tone
+- [DONE] Provide actionable, specific feedback
+- [DONE] Include code examples with suggestions
+- [DONE] Reference documentation and best practices
+- [DONE] Maintain respectful, constructive tone
 
 ### 3. Performance Optimization
-- ✅ Cache analysis results to avoid redundant work
-- ✅ Use incremental reviews for large PRs
-- ✅ Enable parallel agent execution
-- ✅ Batch comment operations efficiently
+- [DONE] Cache analysis results to avoid redundant work
+- [DONE] Use incremental reviews for large PRs
+- [DONE] Enable parallel agent execution
+- [DONE] Batch comment operations efficiently
 
 ### 4. PR Templates
 

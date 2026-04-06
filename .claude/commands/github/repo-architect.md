@@ -122,7 +122,7 @@ npx claude-flow start --ui
 - 🧠 ruv-swarm integration
 - 🎯 SPARC development modes  
 - 🔧 GitHub workflow automation
-- 📊 Advanced coordination capabilities
+- [STATS] Advanced coordination capabilities
 
 ## Documentation
 See CLAUDE.md for complete integration instructions.`

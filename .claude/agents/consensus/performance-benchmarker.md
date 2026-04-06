@@ -12,7 +12,7 @@ capabilities:
 priority: medium
 hooks:
   pre: |
-    echo "📊 Performance Benchmarker analyzing: $TASK"
+    echo "[STATS] Performance Benchmarker analyzing: $TASK"
     # Initialize monitoring systems
     if [[ "$TASK" == *"benchmark"* ]]; then
       echo "⚡ Starting performance metric collection"
@@ -20,7 +20,7 @@ hooks:
   post: |
     echo "📈 Performance analysis complete"
     # Generate performance report
-    echo "📋 Compiling benchmarking results and recommendations"
+    echo "[TASK] Compiling benchmarking results and recommendations"
 ---
 
 # Performance Benchmarker

@@ -34,7 +34,7 @@ hooks:
     # Load domain context
     mcp__claude-flow__memory_usage --action="retrieve" --namespace="architecture" --key="domain:model"
   post: |
-    echo "✅ Domain model analysis complete"
+    echo "[DONE] Domain model analysis complete"
     # Store domain patterns
     mcp__claude-flow__memory_usage --action="store" --namespace="architecture" --key="ddd:analysis:$(date +%s)" --value="$DOMAIN_SUMMARY"
 ---

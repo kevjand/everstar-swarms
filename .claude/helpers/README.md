@@ -2,7 +2,7 @@
 
 This directory contains helper scripts and utilities for V3 development.
 
-## 🚀 Quick Start
+## > Quick Start
 
 ```bash
 # Initialize V3 development environment
@@ -29,7 +29,7 @@ This directory contains helper scripts and utilities for V3 development.
   .claude/helpers/v3.sh full-status    # Complete status overview
   ```
 
-### 📊 V3 Progress Management
+### [STATS] V3 Progress Management
 - **`update-v3-progress.sh`** - Update V3 development metrics
   ```bash
   # Usage examples:
@@ -40,7 +40,7 @@ This directory contains helper scripts and utilities for V3 development.
   .claude/helpers/update-v3-progress.sh status        # Show current status
   ```
 
-### 🔍 Configuration Validation
+### [SEARCH] Configuration Validation
 - **`validate-v3-config.sh`** - Comprehensive environment validation
   - Checks all required directories and files
   - Validates JSON configuration files

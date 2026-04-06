@@ -4,9 +4,9 @@
 
 ---
 
-## ✅ IMPLEMENTED
+## [DONE] IMPLEMENTED
 
-### 1. ✅ Worktree-Based Parallel Execution
+### 1. [DONE] Worktree-Based Parallel Execution
 **Problem:** Can't run multiple tickets at once
 **Solution:** Git worktrees for isolated execution
 
@@ -26,16 +26,16 @@
 
 ---
 
-### 2. ✅ Simple Progress Display
+### 2. [DONE] Simple Progress Display
 **Problem:** No visibility into what's happening
 **Solution:** Poll agent status every 5 seconds
 
 **What you see:**
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  📋 Ticket: ENG-4214
-  🌳 Branch: kevjand/ENG-4214
-  📁 Worktree: /tmp/everstar-worktrees/kevjand/ENG-4214
+  [TASK] Ticket: ENG-4214
+  [BRANCH] Branch: kevjand/ENG-4214
+  [DIR] Worktree: /tmp/everstar-worktrees/kevjand/ENG-4214
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 +----+------------+--------+-------------+
@@ -56,7 +56,7 @@
 
 ---
 
-## 🔥 HIGH PRIORITY (Next)
+## [HOT] HIGH PRIORITY (Next)
 
 ### 3. Desktop Notifications
 **Problem:** Can't multitask while ticket runs
@@ -82,7 +82,7 @@ osascript -e 'display notification "ENG-'$TICKET_ID' complete!" with title "Ever
 if [ ! -z "$SLACK_WEBHOOK" ]; then
     PR_URL=$(gh pr view --json url -q .url 2>/dev/null || echo "No PR")
     curl -X POST $SLACK_WEBHOOK -d "{
-        \"text\": \"✅ $TICKET_ID complete!\n$PR_URL\nBranch: $BRANCH\"
+        \"text\": \"[DONE] $TICKET_ID complete!\n$PR_URL\nBranch: $BRANCH\"
     }"
 fi
 ```
@@ -137,7 +137,7 @@ Apply these patterns if relevant."
 
 ---
 
-## 💡 NICE TO HAVE
+## [INFO] NICE TO HAVE
 
 ### 6. Rollback on Failure
 **Problem:** Failed tickets leave worktrees in broken state
@@ -147,7 +147,7 @@ Apply these patterns if relevant."
 trap 'on_failure' ERR
 
 on_failure() {
-    echo "❌ Failed - cleaning up worktree"
+    echo "[ERROR] Failed - cleaning up worktree"
     cd "$EVERSTAR_REPO"
     git worktree remove "$WORKTREE_PATH" --force 2>/dev/null || true
     exit 1
@@ -182,14 +182,14 @@ on_failure() {
 ```bash
 # Add queue status:
 function show_queue() {
-    echo "📊 Queue Status:"
+    echo "[STATS] Queue Status:"
     for TICKET in "${TICKETS[@]}"; do
         if ps aux | grep -q "[e]verstar-cli.sh $TICKET"; then
-            echo "  ⏳ $TICKET - Running"
+            echo "  [WAIT] $TICKET - Running"
         else
             WORKTREE="/tmp/everstar-worktrees/$USER_PREFIX/$TICKET"
             if [ -d "$WORKTREE" ]; then
-                echo "  ✅ $TICKET - Complete"
+                echo "  [DONE] $TICKET - Complete"
             else
                 echo "  ⏸️  $TICKET - Waiting"
             fi
@@ -223,14 +223,14 @@ done
 
 ---
 
-## 📊 Current State
+## [STATS] Current State
 
 **What Works Now:**
-- ✅ Parallel execution via worktrees
-- ✅ Consistent branch naming (`user/ENG-XXXX`)
-- ✅ Simple progress visibility
-- ✅ Auto-cleanup empty worktrees
-- ✅ Batch processing multiple tickets
+- [DONE] Parallel execution via worktrees
+- [DONE] Consistent branch naming (`user/ENG-XXXX`)
+- [DONE] Simple progress visibility
+- [DONE] Auto-cleanup empty worktrees
+- [DONE] Batch processing multiple tickets
 
 **Usage:**
 ```bash
@@ -259,11 +259,11 @@ git worktree prune
 
 ---
 
-## 🚀 Implementation Priority
+## > Implementation Priority
 
 **Do This Week:**
-1. ✅ Worktrees + parallel execution (DONE)
-2. ✅ Simple progress display (DONE)
+1. [DONE] Worktrees + parallel execution (DONE)
+2. [DONE] Simple progress display (DONE)
 3. Desktop notifications (5 min)
 4. Pattern learning (20 min)
 
@@ -279,7 +279,7 @@ git worktree prune
 
 ---
 
-## 💡 Key Principle
+## [INFO] Key Principle
 
 **Keep it simple.** Every feature should:
 - Take <30 minutes to implement

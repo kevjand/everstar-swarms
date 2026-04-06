@@ -97,7 +97,7 @@ optimize_patterns() {
 }
 EOF
 
-  echo "[$(date +%H:%M:%S)] ✓ Learning: Intel ${intel_score}% | Patterns: $short_count/$long_count | Quality: $avg_quality | Routing: ${routing_accuracy}%"
+  echo "[$(date +%H:%M:%S)] OK Learning: Intel ${intel_score}% | Patterns: $short_count/$long_count | Quality: $avg_quality | Routing: ${routing_accuracy}%"
 
   date +%s > "$LAST_RUN_FILE"
 }
@@ -108,7 +108,7 @@ run_sona_training() {
   # Use agentic-flow for deep learning optimization
   npx agentic-flow@alpha hooks intelligence 2>/dev/null || true
 
-  echo "[$(date +%H:%M:%S)] ✓ SONA training triggered"
+  echo "[$(date +%H:%M:%S)] OK SONA training triggered"
 }
 
 case "${1:-check}" in

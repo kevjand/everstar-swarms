@@ -100,14 +100,14 @@ optimization:
 hooks:
   pre_execution: |
     echo "🔧 Backend API Developer agent starting..."
-    echo "📋 Analyzing existing API structure..."
+    echo "[TASK] Analyzing existing API structure..."
     find . -name "*.route.js" -o -name "*.controller.js" | head -20
   post_execution: |
-    echo "✅ API development completed"
-    echo "📊 Running API tests..."
+    echo "[DONE] API development completed"
+    echo "[STATS] Running API tests..."
     npm run test:api 2>/dev/null || echo "No API tests configured"
   on_error: |
-    echo "❌ Error in API development: {{error_message}}"
+    echo "[ERROR] Error in API development: {{error_message}}"
     echo "🔄 Rolling back changes if needed..."
 examples:
   - trigger: "create user authentication endpoints"

@@ -28,17 +28,17 @@ npm audit --audit-level high
 
 ### CVE-2: Weak Password Hashing
 ```typescript
-// ❌ Old: SHA-256 with hardcoded salt
+// [ERROR] Old: SHA-256 with hardcoded salt
 const hash = crypto.createHash('sha256').update(password + salt).digest('hex');
 
-// ✅ New: bcrypt with 12 rounds
+// [DONE] New: bcrypt with 12 rounds
 import bcrypt from 'bcrypt';
 const hash = await bcrypt.hash(password, 12);
 ```
 
 ### CVE-3: Hardcoded Credentials
 ```typescript
-// ✅ Generate secure random credentials
+// [DONE] Generate secure random credentials
 const apiKey = crypto.randomBytes(32).toString('hex');
 ```
 
@@ -70,7 +70,7 @@ function securePath(userPath: string, allowedPrefix: string): string {
 ```typescript
 import { execFile } from 'child_process';
 
-// ✅ Safe: No shell interpretation
+// [DONE] Safe: No shell interpretation
 const { stdout } = await execFile('git', [userInput], { shell: false });
 ```
 

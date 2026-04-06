@@ -85,7 +85,7 @@ check_health() {
 }
 EOF
 
-  echo "[$(date +%H:%M:%S)] ✓ Health: $status | Disk: ${disk_usage}% | Memory: ${mem_pct}% | Load: $load_avg"
+  echo "[$(date +%H:%M:%S)] OK Health: $status | Disk: ${disk_usage}% | Memory: ${mem_pct}% | Load: $load_avg"
 
   date +%s > "$LAST_RUN_FILE"
 

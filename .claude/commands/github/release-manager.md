@@ -116,7 +116,7 @@ mcp__github__create_pull_request {
   title: "Release v1.0.72: GitHub Integration and Swarm Enhancements",
   head: "release/v1.0.72", 
   base: "main",
-  body: `## 🚀 Release v1.0.72
+  body: `## > Release v1.0.72
 
 ### 🎯 Release Highlights
 - **GitHub Workflow Integration**: Complete GitHub command suite with swarm coordination
@@ -147,7 +147,7 @@ mcp__github__create_pull_request {
 - Memory coordination optimization
 - Documentation synchronization
 
-### ✅ Validation Results
+### [DONE] Validation Results
 - [x] Unit tests: All passing
 - [x] Integration tests: 89% success rate
 - [x] Lint checks: Clean
@@ -167,7 +167,7 @@ This release was coordinated using ruv-swarm agents:
 This release is production-ready with comprehensive validation and testing.
 
 ---
-🤖 Generated with Claude Code using ruv-swarm coordination`
+[BOT] Generated with Claude Code using ruv-swarm coordination`
 }
 ```
 

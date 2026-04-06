@@ -34,11 +34,11 @@ Shows:
 4. Health check: Use tool `mcp__claude-flow__health_check` with parameters `{"components": ["swarm", "memory", "neural"]}`
 
 ## Important Reminders
-- ✅ This tool provides coordination and structure
-- ✅ Claude Code performs all actual implementation
-- ❌ The tool does NOT write code
-- ❌ The tool does NOT access files directly
-- ❌ The tool does NOT execute commands
+- [DONE] This tool provides coordination and structure
+- [DONE] Claude Code performs all actual implementation
+- [ERROR] The tool does NOT write code
+- [ERROR] The tool does NOT access files directly
+- [ERROR] The tool does NOT execute commands
 
 ## See Also
 - Main documentation: /CLAUDE.md

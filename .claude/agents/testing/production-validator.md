@@ -12,12 +12,12 @@ capabilities:
 priority: critical
 hooks:
   pre: |
-    echo "🔍 Production Validator starting: $TASK"
+    echo "[SEARCH] Production Validator starting: $TASK"
     # Verify no mock implementations remain
     echo "🚫 Scanning for mock/fake implementations..."
-    grep -r "mock\|fake\|stub\|TODO\|FIXME" src/ || echo "✅ No mock implementations found"
+    grep -r "mock\|fake\|stub\|TODO\|FIXME" src/ || echo "[DONE] No mock implementations found"
   post: |
-    echo "✅ Production validation complete"
+    echo "[DONE] Production validation complete"
     # Run full test suite against real implementations
     if [ -f "package.json" ]; then
       npm run test:production --if-present

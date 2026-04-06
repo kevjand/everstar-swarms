@@ -32,7 +32,7 @@ tools:
 priority: critical
 hooks:
   pre: |
-    echo "🚀 [Release Manager] starting: $TASK"
+    echo "> [Release Manager] starting: $TASK"
 
     # 1. Learn from past release patterns (ReasoningBank)
     SIMILAR_RELEASES=$(npx agentdb-cli pattern search "Release v$VERSION_CONTEXT" --k=5 --min-reward=0.8)
@@ -49,7 +49,7 @@ hooks:
       --status "started"
 
   post: |
-    echo "✅ [Release Manager] completed: $TASK"
+    echo "[DONE] [Release Manager] completed: $TASK"
 
     # 1. Calculate release success metrics
     REWARD=$(calculate_release_quality "$RELEASE_OUTPUT")
@@ -121,7 +121,7 @@ const failedReleases = await reasoningBank.searchPatterns({
 });
 
 if (failedReleases.length > 0) {
-  console.log('⚠️  Avoiding past release failures:');
+  console.log('[WARN]  Avoiding past release failures:');
   failedReleases.forEach(pattern => {
     console.log(`- ${pattern.critique}`);
     console.log(`  Failure cause: ${pattern.output.failureCause}`);
@@ -383,7 +383,7 @@ mcp__github__create_pull_request {
   title: "Release v1.0.72: GitHub Integration and Swarm Enhancements",
   head: "release/v1.0.72", 
   base: "main",
-  body: `## 🚀 Release v1.0.72
+  body: `## > Release v1.0.72
 
 ### 🎯 Release Highlights
 - **GitHub Workflow Integration**: Complete GitHub command suite with swarm coordination
@@ -414,7 +414,7 @@ mcp__github__create_pull_request {
 - Memory coordination optimization
 - Documentation synchronization
 
-### ✅ Validation Results
+### [DONE] Validation Results
 - [x] Unit tests: All passing
 - [x] Integration tests: 89% success rate
 - [x] Lint checks: Clean
@@ -434,7 +434,7 @@ This release was coordinated using ruv-swarm agents:
 This release is production-ready with comprehensive validation and testing.
 
 ---
-🤖 Generated with Claude Code using ruv-swarm coordination`
+[BOT] Generated with Claude Code using ruv-swarm coordination`
 }
 ```
 

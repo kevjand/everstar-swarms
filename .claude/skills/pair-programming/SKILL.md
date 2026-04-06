@@ -667,7 +667,7 @@ claude-flow pair --start \
 > AI performs security review, suggests improvements
 
 /commit --message "feat: JWT authentication with refresh tokens"
-✅ Truth Score: 0.98 - Committed successfully
+[DONE] Truth Score: 0.98 - Committed successfully
 ```
 
 #### Example 2: Bug Fixing
@@ -706,7 +706,7 @@ claude-flow pair --start \
 > AI generates proper cleanup code
 
 /test
-> Memory stable at 150MB ✅
+> Memory stable at 150MB [DONE]
 
 /commit --message "fix: memory leak in event emitters"
 ```
@@ -739,14 +739,14 @@ claude-flow pair --start \
 > You write just enough code to pass tests
 
 /test
-> Tests passing: 3/3 ✅
+> Tests passing: 3/3 [DONE]
 
 [REFACTOR PHASE]
 /refactor --pattern repository
 > AI refactors to repository pattern
 
 /test
-> Tests still passing: 3/3 ✅
+> Tests still passing: 3/3 [DONE]
 
 [NEXT CYCLE]
 /test-gen "remove item from cart"
@@ -791,12 +791,12 @@ claude-flow pair --start \
 # You refactor with AI guidance
 
 /test
-> All tests passing ✅
+> All tests passing [DONE]
 
 /review --compare
 > AI shows before/after comparison
 > Code complexity: 35 → 12
-> Truth score: 0.99 ✅
+> Truth score: 0.99 [DONE]
 
 /commit --message "refactor: modernize UserService with async/await"
 ```
@@ -834,14 +834,14 @@ claude-flow pair --start \
 # You implement with AI guidance
 
 /perf --profile
-> ProductList: 45ms render (90% improvement!) ✅
+> ProductList: 45ms render (90% improvement!) [DONE]
 
 /implement virtualization with react-window
 > AI implements virtual scrolling
 
 /perf --profile
-> ProductList: 12ms render (97% improvement!) ✅
-> FPS: 60 stable ✅
+> ProductList: 12ms render (97% improvement!) [DONE]
+> FPS: 60 stable [DONE]
 
 /commit --message "perf: optimize ProductList with memoization and virtualization"
 ```
@@ -888,7 +888,7 @@ claude-flow pair --start \
 > AI generates OpenAPI documentation
 
 /test --integration
-> All endpoints tested: 15/15 ✅
+> All endpoints tested: 15/15 [DONE]
 ```
 
 ### Session Templates
@@ -947,8 +947,8 @@ Current Role: DRIVER (you)
 Mode: Switch (10m intervals)
 Next Switch: in 3 minutes
 
-📊 Metrics:
-├── Truth Score: 0.982 ✅
+[STATS] Metrics:
+├── Truth Score: 0.982 [DONE]
 ├── Lines Changed: 234
 ├── Files Modified: 5
 ├── Tests Added: 12
@@ -1137,25 +1137,25 @@ claude-flow pair --start --ide vscode
 
 #### Truth Score Thresholds
 ```
-Error:   < 0.90 ❌
-Warning: 0.90 - 0.95 ⚠️
-Good:    0.95 - 0.98 ✅
+Error:   < 0.90 [ERROR]
+Warning: 0.90 - 0.95 [WARN]
+Good:    0.95 - 0.98 [DONE]
 Excellent: > 0.98 🌟
 ```
 
 #### Coverage Thresholds
 ```
-Error:   < 70% ❌
-Warning: 70% - 80% ⚠️
-Good:    80% - 90% ✅
+Error:   < 70% [ERROR]
+Warning: 70% - 80% [WARN]
+Good:    80% - 90% [DONE]
 Excellent: > 90% 🌟
 ```
 
 #### Complexity Thresholds
 ```
-Error:   > 15 ❌
-Warning: 10 - 15 ⚠️
-Good:    5 - 10 ✅
+Error:   > 15 [ERROR]
+Warning: 10 - 15 [WARN]
+Good:    5 - 10 [DONE]
 Excellent: < 5 🌟
 ```
 

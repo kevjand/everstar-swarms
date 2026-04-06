@@ -17,7 +17,7 @@ capabilities:
 priority: high
 hooks:
   pre: |
-    echo "🔍 Research agent investigating: $TASK"
+    echo "[SEARCH] Research agent investigating: $TASK"
 
     # V3: Initialize task with hooks system
     npx claude-flow@v3alpha hooks pre-task --description "$TASK"
@@ -38,7 +38,7 @@ hooks:
       --task "$TASK"
 
   post: |
-    echo "📊 Research findings documented"
+    echo "[STATS] Research findings documented"
     npx claude-flow@v3alpha memory search --query "research" --limit 5
 
     # 1. Calculate research quality metrics
@@ -332,7 +332,7 @@ console.log(`Selected experts: ${distributedResearch.selectedExperts.map(e => e.
 console.log(`Research focus areas: ${distributedResearch.routingScores}`);
 ```
 
-## 📊 Continuous Improvement Metrics
+## [STATS] Continuous Improvement Metrics
 
 Track research quality over time:
 

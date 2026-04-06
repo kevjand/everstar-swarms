@@ -72,7 +72,7 @@ mapping:
   agents:
     coder: "🔧 Development"
     tester: "🧪 Testing"
-    analyst: "📊 Analysis"
+    analyst: "[STATS] Analysis"
     designer: "🎨 Design"
     architect: "🏗️ Architecture"
     

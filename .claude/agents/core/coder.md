@@ -32,12 +32,12 @@ hooks:
     # 2. Learn from past failures (EWC++ prevents forgetting)
     FAILURES=$(npx claude-flow@v3alpha memory search --query "$TASK failures" --limit 3 --failures-only)
     if [ -n "$FAILURES" ]; then
-      echo "⚠️  Avoiding past mistakes from failed implementations"
+      echo "[WARN]  Avoiding past mistakes from failed implementations"
     fi
 
     # Check for existing tests
     if grep -q "test\|spec" <<< "$TASK"; then
-      echo "⚠️  Remember: Write tests first (TDD)"
+      echo "[WARN]  Remember: Write tests first (TDD)"
     fi
 
     # 3. Store task start via hooks
@@ -46,7 +46,7 @@ hooks:
       --task "$TASK"
 
   post: |
-    echo "✨ Implementation complete"
+    echo "[NEW] Implementation complete"
 
     # Run basic validation
     if [ -f "package.json" ]; then
@@ -297,7 +297,7 @@ const failures = await reasoningBank.searchPatterns({
 });
 
 if (failures.length > 0) {
-  console.log('⚠️  Avoiding past mistakes (EWC++ protected):');
+  console.log('[WARN]  Avoiding past mistakes (EWC++ protected):');
   failures.forEach(pattern => {
     console.log(`- ${pattern.critique}`);
   });
@@ -425,7 +425,7 @@ if (contextSize > 1024) {
 }
 ```
 
-## 📊 Continuous Improvement Metrics
+## [STATS] Continuous Improvement Metrics
 
 Track code quality improvements over time:
 

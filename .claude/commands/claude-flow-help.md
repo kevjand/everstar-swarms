@@ -11,20 +11,20 @@ Claude-Flow is the ultimate multi-terminal orchestration platform that revolutio
 
 ## Core Commands
 
-### 🚀 System Management
+### > System Management
 - `./claude-flow start` - Start orchestration system
 - `./claude-flow start --ui` - Start with interactive process management UI
 - `./claude-flow status` - Check system status
 - `./claude-flow monitor` - Real-time monitoring
 - `./claude-flow stop` - Stop orchestration
 
-### 🤖 Agent Management
+### [BOT] Agent Management
 - `./claude-flow agent spawn <type>` - Create new agent
 - `./claude-flow agent list` - List active agents
 - `./claude-flow agent info <id>` - Agent details
 - `./claude-flow agent terminate <id>` - Stop agent
 
-### 📋 Task Management
+### [TASK] Task Management
 - `./claude-flow task create <type> "description"` - Create task
 - `./claude-flow task list` - List all tasks
 - `./claude-flow task status <id>` - Task status
@@ -58,7 +58,7 @@ Claude-Flow is the ultimate multi-terminal orchestration platform that revolutio
 - `./claude-flow mcp config` - Show configuration
 - `./claude-flow mcp logs` - View MCP logs
 
-### 🤖 Claude Integration
+### [BOT] Claude Integration
 - `./claude-flow claude spawn "task"` - Spawn Claude with enhanced guidance
 - `./claude-flow claude batch <file>` - Execute workflow configuration
 

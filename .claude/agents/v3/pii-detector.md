@@ -19,7 +19,7 @@ hooks:
   pre: |
     echo "🔐 PII Detector scanning for sensitive data..."
   post: |
-    echo "✅ PII scan complete"
+    echo "[DONE] PII scan complete"
 ---
 
 # PII Detector Agent
@@ -58,7 +58,7 @@ async function scanForPII(content: string, source: string) {
   const result = await detector.detect(content);
 
   if (result.piiFound) {
-    console.log(`⚠️ PII detected in ${source}`);
+    console.log(`[WARN] PII detected in ${source}`);
 
     // Detailed PII analysis
     const piiTypes = analyzePIITypes(content);

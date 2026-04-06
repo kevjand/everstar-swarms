@@ -18,9 +18,9 @@ hooks:
       echo "🛡️  Activating cryptographic verification"
     fi
   post: |
-    echo "✅ Security protocols verified"
+    echo "[DONE] Security protocols verified"
     # Run security audit
-    echo "🔍 Conducting post-operation security audit"
+    echo "[SEARCH] Conducting post-operation security audit"
 ---
 
 # Consensus Security Manager

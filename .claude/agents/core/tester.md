@@ -25,7 +25,7 @@ hooks:
     # 1. Learn from past test failures (ReasoningBank + HNSW 150x-12,500x faster)
     FAILED_TESTS=$(npx claude-flow@v3alpha memory search --query "$TASK failures" --limit 5 --failures-only --use-hnsw)
     if [ -n "$FAILED_TESTS" ]; then
-      echo "⚠️  Learning from past test failures (HNSW-indexed)"
+      echo "[WARN]  Learning from past test failures (HNSW-indexed)"
       npx claude-flow@v3alpha hooks intelligence --action pattern-search --query "$TASK" --failures-only
     fi
 
@@ -37,7 +37,7 @@ hooks:
 
     # Check test environment
     if [ -f "jest.config.js" ] || [ -f "vitest.config.ts" ]; then
-      echo "✓ Test framework detected"
+      echo "OK Test framework detected"
     fi
 
     # 3. Store task start via hooks
@@ -46,7 +46,7 @@ hooks:
       --task "$TASK"
 
   post: |
-    echo "📋 Test results summary:"
+    echo "[TASK] Test results summary:"
     TEST_OUTPUT=$(npm test -- --reporter=json 2>/dev/null | jq '.numPassedTests, .numFailedTests' 2>/dev/null || echo "Tests completed")
     echo "$TEST_OUTPUT"
 
@@ -336,7 +336,7 @@ const failedTests = await reasoningBank.searchPatterns({
 });
 
 if (failedTests.length > 0) {
-  console.log('⚠️  Learning from past test failures (HNSW-indexed):');
+  console.log('[WARN]  Learning from past test failures (HNSW-indexed):');
   failedTests.forEach(pattern => {
     console.log(`- ${pattern.task}: ${pattern.critique}`);
     console.log(`  Root cause: ${pattern.output}`);
@@ -480,7 +480,7 @@ const experts = await coordinator.routeToExperts(
 console.log(`Selected experts: ${experts.selectedExperts.map(e => e.name)}`);
 ```
 
-## 📊 Continuous Improvement Metrics
+## [STATS] Continuous Improvement Metrics
 
 Track test quality improvements:
 

@@ -474,7 +474,7 @@ release:
 
   changelog:
     sections:
-      - title: "🚀 Features"
+      - title: "> Features"
         labels: ["feature", "enhancement"]
         emoji: true
       - title: "🐛 Bug Fixes"
@@ -814,7 +814,7 @@ jobs:
         run: |
           # Create announcement issue
           gh issue create \
-            --title "🎉 Released ${{ github.ref_name }}" \
+            --title "[SUCCESS] Released ${{ github.ref_name }}" \
             --body "$(cat RELEASE_CHANGELOG.md)" \
             --label "announcement,release"
 

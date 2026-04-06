@@ -39,10 +39,10 @@ case "$1" in
     ;;
 
   "full-status"|"fs")
-    echo "🔍 V3 Development Environment Status"
+    echo "[SEARCH] V3 Development Environment Status"
     echo "====================================="
     echo ""
-    echo "📊 Quick Status:"
+    echo "[STATS] Quick Status:"
     "$HELPERS_DIR/v3-quick-status.sh"
     echo ""
     echo "📺 Full Statusline:"
@@ -50,7 +50,7 @@ case "$1" in
     ;;
 
   "init")
-    echo "🚀 Initializing V3 Development Environment..."
+    echo "> Initializing V3 Development Environment..."
 
     # Run validation first
     echo ""
@@ -60,7 +60,7 @@ case "$1" in
       echo "2️⃣ Showing current status..."
       "$HELPERS_DIR/v3-quick-status.sh"
       echo ""
-      echo "✅ V3 development environment is ready!"
+      echo "[DONE] V3 development environment is ready!"
       echo ""
       echo "🔧 Quick commands:"
       echo "  v3 status        - Show quick status"
@@ -69,7 +69,7 @@ case "$1" in
       echo "  v3 validate      - Validate configuration"
     else
       echo ""
-      echo "❌ Configuration validation failed. Please fix issues before proceeding."
+      echo "[ERROR] Configuration validation failed. Please fix issues before proceeding."
       exit 1
     fi
     ;;

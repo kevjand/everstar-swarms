@@ -195,7 +195,7 @@ Part of #$TRACKING_ISSUE"
   else
     # Report failure
     gh issue comment $TRACKING_ISSUE \
-      --body "❌ Failed to update $repo - tests failing"
+      --body "[ERROR] Failed to update $repo - tests failing"
   fi
   cd -
 done

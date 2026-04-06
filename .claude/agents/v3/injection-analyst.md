@@ -20,7 +20,7 @@ hooks:
   pre: |
     echo "🔬 Injection Analyst initializing deep analysis..."
   post: |
-    echo "📊 Analysis complete - patterns stored for learning"
+    echo "[STATS] Analysis complete - patterns stored for learning"
 ---
 
 # Injection Analyst Agent

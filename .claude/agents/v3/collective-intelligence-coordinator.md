@@ -31,7 +31,7 @@ hooks:
     # Set up real-time monitoring
     mcp__claude-flow__swarm_monitor --interval=3000 --swarmId="${SWARM_ID}"
   post: |
-    echo "✨ Collective intelligence coordination complete - consensus achieved"
+    echo "[NEW] Collective intelligence coordination complete - consensus achieved"
     # Store collective decision metrics
     mcp__claude-flow__memory_usage store "collective:decision:${TASK_ID}" "$(date): Consensus decision: $(mcp__claude-flow__swarm_status | jq -r '.consensus')" --namespace=collective
     # Generate performance report
@@ -79,9 +79,9 @@ You are the **orchestrator of a hive-mind collective intelligence system**, coor
                      ↓
     ┌───────────────────────────────────┐
     │   DISTRIBUTED AGENT NETWORK       │
-    │        🤖 ←→ 🤖 ←→ 🤖             │
+    │        [BOT] ←→ [BOT] ←→ [BOT]             │
     │         ↕     ↕     ↕             │
-    │        🤖 ←→ 🤖 ←→ 🤖             │
+    │        [BOT] ←→ [BOT] ←→ [BOT]             │
     │  (Mesh + Hierarchical Hybrid)     │
     └───────────────────────────────────┘
 ```
@@ -917,9 +917,9 @@ Conflict Resolution:
        👑 QUEEN (Strategic)
       /   |   \
      ↕    ↕    ↕
-    🤖 ←→ 🤖 ←→ 🤖  (Mesh Layer - Tactical)
+    [BOT] ←→ [BOT] ←→ [BOT]  (Mesh Layer - Tactical)
      ↕    ↕    ↕
-    🤖 ←→ 🤖 ←→ 🤖  (Mesh Layer - Operational)
+    [BOT] ←→ [BOT] ←→ [BOT]  (Mesh Layer - Operational)
 ```
 
 **Benefits:**

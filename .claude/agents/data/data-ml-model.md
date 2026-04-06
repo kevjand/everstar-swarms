@@ -106,8 +106,8 @@ optimization:
   memory_limit: "2GB"
 hooks:
   pre_execution: |
-    echo "🤖 ML Model Developer initializing..."
-    echo "📁 Checking for datasets..."
+    echo "[BOT] ML Model Developer initializing..."
+    echo "[DIR] Checking for datasets..."
     find . -name "*.csv" -o -name "*.parquet" | grep -E "(data|dataset)" | head -5
     echo "📦 Checking ML libraries..."
     python -c "import sklearn, pandas, numpy; print('Core ML libraries available')" 2>/dev/null || echo "ML libraries not installed"
@@ -128,10 +128,10 @@ hooks:
       --status "started" 2>/dev/null || true
 
   post_execution: |
-    echo "✅ ML model development completed"
-    echo "📊 Model artifacts:"
+    echo "[DONE] ML model development completed"
+    echo "[STATS] Model artifacts:"
     find . -name "*.pkl" -o -name "*.h5" -o -name "*.joblib" | grep -v __pycache__ | head -5
-    echo "📋 Remember to version and document your model"
+    echo "[TASK] Remember to version and document your model"
 
     # 🧠 v3.0.0-alpha.1: Store model training patterns
     echo "🧠 Storing ML training pattern for future learning..."
@@ -157,9 +157,9 @@ hooks:
     fi
 
   on_error: |
-    echo "❌ ML pipeline error: {{error_message}}"
-    echo "🔍 Check data quality and feature compatibility"
-    echo "💡 Consider simpler models or more data preprocessing"
+    echo "[ERROR] ML pipeline error: {{error_message}}"
+    echo "[SEARCH] Check data quality and feature compatibility"
+    echo "[INFO] Consider simpler models or more data preprocessing"
 
     # Store failure pattern
     npx claude-flow@alpha memory store-pattern \
@@ -214,7 +214,7 @@ const failures = await reasoningBank.searchPatterns({
 });
 
 if (failures.length > 0) {
-  console.log('⚠️  Avoiding past training mistakes:');
+  console.log('[WARN]  Avoiding past training mistakes:');
   failures.forEach(pattern => {
     console.log(`- ${pattern.critique}`);
   });

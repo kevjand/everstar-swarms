@@ -42,4 +42,4 @@ Parameters: {"operation": "session", "timeframe": "24h"}
 - 📉 32.3% average token reduction
 - 🎯 More focused operations
 - 🔄 Intelligent result reuse
-- 📊 Cumulative improvements
+- [STATS] Cumulative improvements

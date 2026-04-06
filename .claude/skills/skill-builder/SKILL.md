@@ -47,7 +47,7 @@ EOF
 
 ## Complete Specification
 
-### 📋 YAML Frontmatter (REQUIRED)
+### [TASK] YAML Frontmatter (REQUIRED)
 
 Every SKILL.md **must** start with YAML frontmatter containing exactly two required fields:
 
@@ -68,11 +68,11 @@ and when Claude should use it."       # Include BOTH what & when
 - **Usage**: Shown in skill lists, UI, and loaded into Claude's system prompt
 - **Best Practice**: Use Title Case, be concise and descriptive
 - **Examples**:
-  - ✅ "API Documentation Generator"
-  - ✅ "React Component Builder"
-  - ✅ "Database Schema Designer"
-  - ❌ "skill-1" (not descriptive)
-  - ❌ "This is a very long skill name that exceeds sixty-four characters" (too long)
+  - [DONE] "API Documentation Generator"
+  - [DONE] "React Component Builder"
+  - [DONE] "Database Schema Designer"
+  - [ERROR] "skill-1" (not descriptive)
+  - [ERROR] "This is a very long skill name that exceeds sixty-four characters" (too long)
 
 **`description`** (REQUIRED):
 - **Type**: String
@@ -84,31 +84,31 @@ and when Claude should use it."       # Include BOTH what & when
 - **Usage**: Loaded into Claude's system prompt for autonomous matching
 - **Best Practice**: Front-load key trigger words, be specific about use cases
 - **Examples**:
-  - ✅ "Generate OpenAPI 3.0 documentation from Express.js routes. Use when creating API docs, documenting endpoints, or building API specifications."
-  - ✅ "Create React functional components with TypeScript, hooks, and tests. Use when scaffolding new components or converting class components."
-  - ❌ "A comprehensive guide to API documentation" (no "when" clause)
-  - ❌ "Documentation tool" (too vague)
+  - [DONE] "Generate OpenAPI 3.0 documentation from Express.js routes. Use when creating API docs, documenting endpoints, or building API specifications."
+  - [DONE] "Create React functional components with TypeScript, hooks, and tests. Use when scaffolding new components or converting class components."
+  - [ERROR] "A comprehensive guide to API documentation" (no "when" clause)
+  - [ERROR] "Documentation tool" (too vague)
 
 #### YAML Formatting Rules
 
 ```yaml
 ---
-# ✅ CORRECT: Simple string
+# [DONE] CORRECT: Simple string
 name: "API Builder"
 description: "Creates REST APIs with Express and TypeScript."
 
-# ✅ CORRECT: Multi-line description
+# [DONE] CORRECT: Multi-line description
 name: "Full-Stack Generator"
 description: "Generates full-stack applications with React frontend and Node.js backend. Use when starting new projects or scaffolding applications."
 
-# ✅ CORRECT: Special characters quoted
+# [DONE] CORRECT: Special characters quoted
 name: "JSON:API Builder"
 description: "Creates JSON:API compliant endpoints: pagination, filtering, relationships."
 
-# ❌ WRONG: Missing quotes with special chars
+# [ERROR] WRONG: Missing quotes with special chars
 name: API:Builder  # YAML parse error!
 
-# ❌ WRONG: Extra fields (ignored but discouraged)
+# [ERROR] WRONG: Extra fields (ignored but discouraged)
 name: "My Skill"
 description: "My description"
 version: "1.0.0"       # NOT part of spec
@@ -351,28 +351,28 @@ See [examples/](resources/examples/)
 
 **Front-Load Keywords**:
 ```yaml
-# ✅ GOOD: Keywords first
+# [DONE] GOOD: Keywords first
 description: "Generate TypeScript interfaces from JSON schema. Use when converting schemas, creating types, or building API clients."
 
-# ❌ BAD: Keywords buried
+# [ERROR] BAD: Keywords buried
 description: "This skill helps developers who need to work with JSON schemas by providing a way to generate TypeScript interfaces."
 ```
 
 **Include Trigger Conditions**:
 ```yaml
-# ✅ GOOD: Clear "when" clause
+# [DONE] GOOD: Clear "when" clause
 description: "Debug React performance issues using Chrome DevTools. Use when components re-render unnecessarily, investigating slow updates, or optimizing bundle size."
 
-# ❌ BAD: No trigger conditions
+# [ERROR] BAD: No trigger conditions
 description: "Helps with React performance debugging."
 ```
 
 **Be Specific**:
 ```yaml
-# ✅ GOOD: Specific technologies
+# [DONE] GOOD: Specific technologies
 description: "Create Express.js REST endpoints with Joi validation, Swagger docs, and Jest tests. Use when building new APIs or adding endpoints."
 
-# ❌ BAD: Too generic
+# [ERROR] BAD: Too generic
 description: "Build API endpoints with proper validation and testing."
 ```
 
@@ -514,7 +514,7 @@ See `resources/examples/config.json`:
 
 ---
 
-### ✅ Validation Checklist
+### [DONE] Validation Checklist
 
 Before publishing a skill, verify:
 
@@ -685,8 +685,8 @@ description: "Comprehensive what with all features and integrations. Use when [t
 
 Expected output:
 ```
-✓ Setup complete
-✓ Configuration validated
+OK Setup complete
+OK Configuration validated
 → Ready to use
 ```
 

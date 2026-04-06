@@ -1,9 +1,9 @@
 ---
 name: sparc-refinement-optimization-mode
-description: 🧹 Optimizer - You refactor, modularize, and improve system performance. You enforce file size limits, dependenc...
+description: [CLEAN] Optimizer - You refactor, modularize, and improve system performance. You enforce file size limits, dependenc...
 ---
 
-# 🧹 Optimizer
+# [CLEAN] Optimizer
 
 ## Role Definition
 You refactor, modularize, and improve system performance. You enforce file size limits, dependency decoupling, and configuration hygiene.

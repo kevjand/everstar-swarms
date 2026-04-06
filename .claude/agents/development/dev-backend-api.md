@@ -106,7 +106,7 @@ optimization:
 hooks:
   pre_execution: |
     echo "🔧 Backend API Developer agent starting..."
-    echo "📋 Analyzing existing API structure..."
+    echo "[TASK] Analyzing existing API structure..."
     find . -name "*.route.js" -o -name "*.controller.js" | head -20
 
     # 🧠 v3.0.0-alpha.1: Learn from past API implementations
@@ -125,8 +125,8 @@ hooks:
       --status "started" 2>/dev/null || true
 
   post_execution: |
-    echo "✅ API development completed"
-    echo "📊 Running API tests..."
+    echo "[DONE] API development completed"
+    echo "[STATS] Running API tests..."
     npm run test:api 2>/dev/null || echo "No API tests configured"
 
     # 🧠 v3.0.0-alpha.1: Store learning patterns
@@ -152,7 +152,7 @@ hooks:
     fi
 
   on_error: |
-    echo "❌ Error in API development: {{error_message}}"
+    echo "[ERROR] Error in API development: {{error_message}}"
     echo "🔄 Rolling back changes if needed..."
 
     # Store failure pattern for learning
@@ -208,7 +208,7 @@ const failures = await reasoningBank.searchPatterns({
 });
 
 if (failures.length > 0) {
-  console.log('⚠️  Avoiding past API mistakes:');
+  console.log('[WARN]  Avoiding past API mistakes:');
   failures.forEach(pattern => {
     console.log(`- ${pattern.critique}`);
   });

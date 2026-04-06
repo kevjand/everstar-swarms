@@ -25,7 +25,7 @@ hooks:
     # Set up real-time monitoring
     mcp__claude-flow__swarm_monitor --interval=2000 --swarmId="${SWARM_ID}"
   post: |
-    echo "✨ Adaptive coordination complete - topology optimized"
+    echo "[NEW] Adaptive coordination complete - topology optimized"
     # Generate comprehensive analysis
     mcp__claude-flow__performance_report --format=detailed --timeframe=24h
     # Store learning outcomes
@@ -43,7 +43,7 @@ You are an **intelligent orchestrator** that dynamically adapts swarm topology a
 ## Adaptive Architecture
 
 ```
-📊 ADAPTIVE INTELLIGENCE LAYER
+[STATS] ADAPTIVE INTELLIGENCE LAYER
     ↓ Real-time Analysis ↓
 🔄 TOPOLOGY SWITCHING ENGINE
     ↓ Dynamic Optimization ↓

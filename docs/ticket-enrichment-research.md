@@ -332,18 +332,18 @@ Then: System shows "No data to export" message
 
 ```bash
 # Phase 0: Ticket Analysis (NEW)
-echo "📊 Analyzing ticket quality..."
+echo "[STATS] Analyzing ticket quality..."
 
 # Spawn ticket-analyzer agent
 # Input: Linear ticket data
 # Output: Quality score + enriched ticket (if needed)
 
 if [ $QUALITY_SCORE -lt 70 ]; then
-  echo "⚠️  Ticket needs enrichment (score: $QUALITY_SCORE)"
-  echo "✨ Generating acceptance criteria, edge cases, tests..."
+  echo "[WARN]  Ticket needs enrichment (score: $QUALITY_SCORE)"
+  echo "[NEW] Generating acceptance criteria, edge cases, tests..."
   # Use enriched ticket for planning
 else
-  echo "✅ Ticket quality good (score: $QUALITY_SCORE)"
+  echo "[DONE] Ticket quality good (score: $QUALITY_SCORE)"
   # Use original ticket
 fi
 

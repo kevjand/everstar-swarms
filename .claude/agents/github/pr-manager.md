@@ -31,7 +31,7 @@ tools:
 priority: high
 hooks:
   pre: |
-    echo "🚀 [PR Manager] starting: $TASK"
+    echo "> [PR Manager] starting: $TASK"
 
     # 1. Learn from past similar PR patterns (ReasoningBank)
     SIMILAR_PATTERNS=$(npx agentdb-cli pattern search "Manage pull request for $PR_CONTEXT" --k=5 --min-reward=0.8)
@@ -54,7 +54,7 @@ hooks:
       --status "started"
 
   post: |
-    echo "✨ [PR Manager] completed: $TASK"
+    echo "[NEW] [PR Manager] completed: $TASK"
 
     # 1. Calculate success metrics
     REWARD=$(calculate_pr_success "$PR_OUTPUT")
@@ -137,7 +137,7 @@ const failedPRs = await reasoningBank.searchPatterns({
 });
 
 if (failedPRs.length > 0) {
-  console.log('⚠️  Avoiding past PR mistakes:');
+  console.log('[WARN]  Avoiding past PR mistakes:');
   failedPRs.forEach(pattern => {
     console.log(`- ${pattern.critique}`);
     console.log(`  Failure reason: ${pattern.output.failureReason}`);

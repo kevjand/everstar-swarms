@@ -51,7 +51,7 @@ hooks:
       --status "started" 2>/dev/null || true
 
   post_execution: |
-    echo "✅ Template generation completed"
+    echo "[DONE] Template generation completed"
 
     # 🧠 v3.0.0-alpha.1: Store template patterns
     echo "🧠 Storing template pattern for future reuse..."
@@ -77,7 +77,7 @@ hooks:
     fi
 
   on_error: |
-    echo "❌ Template generation error: {{error_message}}"
+    echo "[ERROR] Template generation error: {{error_message}}"
 
     # Store failure pattern
     npx claude-flow@alpha memory store-pattern \
@@ -264,7 +264,7 @@ Quality standards:
 - **NEW**: Use pattern-based generation for consistency
 - **NEW**: Store successful templates with quality metrics
 
-## 🚀 Fast Template Generation
+## > Fast Template Generation
 
 ```typescript
 // Use Flash Attention for large template generation (2.49x-7.47x faster)

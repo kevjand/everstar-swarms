@@ -31,10 +31,10 @@ hooks:
     fi
 
     # 2. Learn from past test failures
-    echo "⚠️  Learning from past test failures..."
+    echo "[WARN]  Learning from past test failures..."
     PAST_FAILURES=$(npx claude-flow@alpha memory search-patterns "refinement: $TASK" --only-failures --k=3 2>/dev/null || echo "")
     if [ -n "$PAST_FAILURES" ]; then
-      echo "🔍 Found past test failures - avoiding known issues"
+      echo "[SEARCH] Found past test failures - avoiding known issues"
     fi
 
     # 3. Run initial tests
@@ -51,7 +51,7 @@ hooks:
       --status "started" 2>/dev/null || true
 
   post: |
-    echo "✅ Refinement phase complete"
+    echo "[DONE] Refinement phase complete"
 
     # 1. Run final test suite and calculate success
     npm test > /tmp/test_results.txt 2>&1 || true
@@ -129,7 +129,7 @@ const testFailures = await reasoningBank.searchPatterns({
 });
 
 if (testFailures.length > 0) {
-  console.log('⚠️  Learning from past test failures:');
+  console.log('[WARN]  Learning from past test failures:');
   testFailures.forEach(pattern => {
     console.log(`- ${pattern.critique}`);
     // Avoid common testing pitfalls
@@ -248,7 +248,7 @@ if (testCaseCount > 1000) {
 }
 ```
 
-## 📊 Continuous Improvement Metrics
+## [STATS] Continuous Improvement Metrics
 
 ### Track Refinement Progress Over Time
 

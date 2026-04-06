@@ -39,7 +39,7 @@ cleanup_branches() {
     AUTO_BRANCHES=$(git branch | grep -E '.*-auto$' | sed 's/^[ *]*//' || true)
 
     if [ -z "$AUTO_BRANCHES" ]; then
-        echo -e "${GREEN}✓${NC} No automation branches to clean"
+        echo -e "${GREEN}OK${NC} No automation branches to clean"
         return
     fi
 
@@ -73,7 +73,7 @@ cleanup_branches() {
         fi
     done
 
-    echo -e "${GREEN}✓${NC} Branch cleanup complete"
+    echo -e "${GREEN}OK${NC} Branch cleanup complete"
     echo ""
 }
 
@@ -85,7 +85,7 @@ cleanup_tmp() {
     TMP_FILES=$(find /tmp -name "ruflo-*" -o -name "everstar-*" 2>/dev/null || true)
 
     if [ -z "$TMP_FILES" ]; then
-        echo -e "${GREEN}✓${NC} No temporary files to clean"
+        echo -e "${GREEN}OK${NC} No temporary files to clean"
         return
     fi
 
@@ -107,7 +107,7 @@ cleanup_tmp() {
         rm -f "$file"
     done
 
-    echo -e "${GREEN}✓${NC} Temporary files cleaned"
+    echo -e "${GREEN}OK${NC} Temporary files cleaned"
     echo ""
 }
 
@@ -121,10 +121,10 @@ cleanup_swarm() {
         read -p "Shutdown active swarm? (y/n): " confirm
         if [ "$confirm" = "y" ]; then
             npx @claude-flow/cli@latest swarm shutdown &> /dev/null || true
-            echo -e "${GREEN}✓${NC} Swarm shutdown"
+            echo -e "${GREEN}OK${NC} Swarm shutdown"
         fi
     else
-        echo -e "${GREEN}✓${NC} No active swarm"
+        echo -e "${GREEN}OK${NC} No active swarm"
     fi
 
     # Check if hive-mind is active
@@ -133,16 +133,16 @@ cleanup_swarm() {
         read -p "Shutdown hive-mind? (y/n): " confirm
         if [ "$confirm" = "y" ]; then
             npx @claude-flow/cli@latest hive-mind shutdown &> /dev/null || true
-            echo -e "${GREEN}✓${NC} Hive-mind shutdown"
+            echo -e "${GREEN}OK${NC} Hive-mind shutdown"
         fi
     else
-        echo -e "${GREEN}✓${NC} No active hive-mind"
+        echo -e "${GREEN}OK${NC} No active hive-mind"
     fi
 
     # Clean memory namespace
     echo "Cleaning active-tickets memory namespace..."
     npx @claude-flow/cli@latest memory delete --namespace "active-tickets" --all &> /dev/null || true
-    echo -e "${GREEN}✓${NC} Memory cleaned"
+    echo -e "${GREEN}OK${NC} Memory cleaned"
 
     echo ""
 }
@@ -195,7 +195,7 @@ archive_completed() {
     MERGED_BRANCHES=$(git branch --merged dev | grep -E '.*-auto$' | sed 's/^[ *]*//' || true)
 
     if [ -z "$MERGED_BRANCHES" ]; then
-        echo -e "${GREEN}✓${NC} No merged branches to archive"
+        echo -e "${GREEN}OK${NC} No merged branches to archive"
         return
     fi
 
@@ -231,14 +231,14 @@ Last Commit: $LAST_COMMIT
 $(git log "$branch" --format="%h %s" --reverse)
 EOF
 
-        echo -e "${GREEN}✓${NC} Archived: $TICKET_ID → $ARCHIVE_FILE"
+        echo -e "${GREEN}OK${NC} Archived: $TICKET_ID → $ARCHIVE_FILE"
 
         # Delete branch
         git branch -d "$branch" 2>/dev/null || true
         git push origin --delete "$branch" 2>/dev/null || true
     done
 
-    echo -e "${GREEN}✓${NC} Archiving complete: $ARCHIVE_DIR"
+    echo -e "${GREEN}OK${NC} Archiving complete: $ARCHIVE_DIR"
     echo ""
 }
 
@@ -280,5 +280,5 @@ case "$MODE" in
         ;;
 esac
 
-echo -e "${GREEN}✓${NC} Cleanup complete!"
+echo -e "${GREEN}OK${NC} Cleanup complete!"
 echo ""

@@ -73,14 +73,14 @@ If you find a bug:
    - Output from `/tmp/ruflo-*.md` files
 3. Submit PR with fix and reference issue number
 
-### ✨ New Features
+### [NEW] New Features
 
 For new features:
 
 1. Open an issue first to discuss the approach
 2. Get consensus from maintainers
 3. Implement with tests
-4. Update documentation (README.md, SETUP.md)
+4. Update documentation (README.md)
 5. Submit PR
 
 ### 📚 Documentation
@@ -198,4 +198,4 @@ By contributing, you agree that your contributions will be licensed under the sa
 
 ---
 
-**Thank you for contributing to Everstar Swarms!** 🎉
+**Thank you for contributing to Everstar Swarms!** [SUCCESS]

@@ -132,7 +132,7 @@ export class SwarmCommand {
   }
 
   private async interactiveSwarmInit(projectName: string): Promise<CommandResult> {
-    console.log(`🚀 Initializing Swarm for ${projectName}`);
+    console.log(`> Initializing Swarm for ${projectName}`);
 
     // Interactive topology selection
     const topology = await this.promptService.select({
@@ -160,7 +160,7 @@ export class SwarmCommand {
     });
 
     return CommandResult.success({
-      message: `✅ Swarm ${projectName} initialized with ${agents.length} agents`,
+      message: `[DONE] Swarm ${projectName} initialized with ${agents.length} agents`,
       data: { swarmId: swarm.id, topology, agentCount: agents.length }
     });
   }
@@ -222,7 +222,7 @@ export class LearningCommand {
     });
 
     return CommandResult.success({
-      message: `🚀 Learning session started with ${options.algorithm}`,
+      message: `> Learning session started with ${options.algorithm}`,
       data: { sessionId: session.id, algorithm: options.algorithm, tier: options.tier }
     });
   }
@@ -247,7 +247,7 @@ export class LearningCommand {
     });
 
     return CommandResult.success({
-      message: `📊 Feedback recorded (reward: ${reward})`,
+      message: `[STATS] Feedback recorded (reward: ${reward})`,
       data: { reward, sessionId: activeSession.id }
     });
   }
@@ -713,7 +713,7 @@ export class CommandPerformanceMonitor {
 
     // Alert if performance degrades
     if (metrics.getP95ExecutionTime() > 5000) { // 5 seconds
-      console.warn(`⚠️  Command '${command}' is performing slowly (P95: ${metrics.getP95ExecutionTime()}ms)`);
+      console.warn(`[WARN]  Command '${command}' is performing slowly (P95: ${metrics.getP95ExecutionTime()}ms)`);
     }
   }
 

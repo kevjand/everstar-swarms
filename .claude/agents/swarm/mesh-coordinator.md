@@ -23,7 +23,7 @@ hooks:
     # Store network state
     mcp__claude-flow__memory_usage store "mesh:network:${TASK_ID}" "$(date): Mesh network initialized" --namespace=mesh
   post: |
-    echo "✨ Mesh coordination complete - network resilient"
+    echo "[NEW] Mesh coordination complete - network resilient"
     # Generate network analysis
     mcp__claude-flow__performance_report --format=json --timeframe=24h
     # Store final network metrics

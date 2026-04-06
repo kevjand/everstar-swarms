@@ -37,10 +37,10 @@ Use `new_task` to assign:
 - Verify all required parameters are included before executing any tool
 
 Validate:
-✅ Files < 500 lines
-✅ No hard-coded env vars
-✅ Modular, testable outputs
-✅ All subtasks end with `attempt_completion` Initialize when any request is received with a brief welcome mesage. Use emojis to make it fun and engaging. Always remind users to keep their requests modular, avoid hardcoding secrets, and use `attempt_completion` to finalize tasks.
+[DONE] Files < 500 lines
+[DONE] No hard-coded env vars
+[DONE] Modular, testable outputs
+[DONE] All subtasks end with `attempt_completion` Initialize when any request is received with a brief welcome mesage. Use emojis to make it fun and engaging. Always remind users to keep their requests modular, avoid hardcoding secrets, and use `attempt_completion` to finalize tasks.
 use new_task for each new task as a sub-task.
 
 ## Available Tools

@@ -106,16 +106,16 @@ optimization:
 hooks:
   pre_execution: |
     echo "🏗️ System Architecture Designer initializing..."
-    echo "📊 Analyzing existing architecture..."
+    echo "[STATS] Analyzing existing architecture..."
     echo "Current project structure:"
     find . -type f -name "*.md" | grep -E "(architecture|design|README)" | head -10
   post_execution: |
-    echo "✅ Architecture design completed"
+    echo "[DONE] Architecture design completed"
     echo "📄 Architecture documents created:"
     find docs/architecture -name "*.md" -newer /tmp/arch_timestamp 2>/dev/null || echo "See above for details"
   on_error: |
-    echo "⚠️ Architecture design consideration: {{error_message}}"
-    echo "💡 Consider reviewing requirements and constraints"
+    echo "[WARN] Architecture design consideration: {{error_message}}"
+    echo "[INFO] Consider reviewing requirements and constraints"
     
 examples:
   - trigger: "design microservices architecture for e-commerce platform"

@@ -107,7 +107,7 @@ EOF
     echo "{\"status\":\"$status\",\"cvesFixed\":3,\"issues\":$total_issues}" > "$SECURITY_DIR/audit-status.json"
   fi
 
-  echo "[$(date +%H:%M:%S)] ✓ Security: $status | Secrets: $secrets | Vulns: $vulns | NPM: $npm_vulns"
+  echo "[$(date +%H:%M:%S)] OK Security: $status | Secrets: $secrets | Vulns: $vulns | NPM: $npm_vulns"
 
   date +%s > "$LAST_RUN_FILE"
 }

@@ -11,27 +11,33 @@ Transforms Linear tickets into fully implemented, tested, and reviewed pull requ
 
 ## Quick Start
 
-### 1. Initial Setup (One-Time)
+### 1. Clone & Setup
+
+```bash
+# Clone the repo
+git clone https://github.com/kevjand/everstar-swarms.git
+cd everstar-swarms
+
+# Make scripts executable
+chmod +x scripts/*.sh
+
+# Run automated setup
+./scripts/setup.sh
+```
 
 **What you need:**
 - GitHub account with Everstar access
 - Linear API key from https://linear.app/settings/api
 - Everstar repository cloned locally
 
-**Run setup:**
-```bash
-cd everstar-swarms
-./scripts/setup.sh
-```
+The setup script will:
+- OK Check prerequisites (Claude CLI, GitHub CLI, npm)
+- OK Walk you through `gh auth login` (opens browser)
+- OK Ask for your Linear API key (paste from Linear settings)
+- OK Configure everstar repository path
+- OK Test all integrations
 
-The script will:
-- Check prerequisites (Claude CLI, GitHub CLI, npm)
-- Walk you through `gh auth login` (opens browser)
-- Ask for your Linear API key (paste from Linear settings)
-- Configure everstar repository path
-- Test all integrations
-
-**See [SETUP.md](SETUP.md) for detailed step-by-step instructions.**
+**Optional:** Copy `.env.example` to `.env` for custom configuration
 
 ### 2. Run Automation
 
@@ -125,7 +131,7 @@ graph LR
     R --> S[Tests Pass?<br/>Coverage >= 85%?]
     S -->|Yes| T[Create PR]
     S -->|No| K
-    T --> U[Complete! 🎉]
+    T --> U[Complete! [SUCCESS]]
 
     style A fill:#e1f5ff
     style C fill:#fff4e1
@@ -317,26 +323,57 @@ Check output in `/tmp/ruflo-execution-ENG-XXXX.md` for:
 - Security scan failures
 - Standards violations
 
+### Worktree Already Exists
+
+```bash
+# Clean up old worktree
+cd $EVERSTAR_REPO
+git worktree remove /tmp/everstar-worktrees/kevjand/ENG-XXXX --force
+
+# Or prune all deleted worktrees
+git worktree prune
+```
+
+### Claude CLI Not Found
+
+```bash
+# Install Claude CLI
+npm install -g @anthropic-ai/claude-code
+
+# Or use Homebrew
+brew install claude-ai/tap/claude
+```
+
+### Repository Not Found
+
+Set EVERSTAR_REPO if auto-detection fails:
+
+```bash
+# Add to ~/.zshrc or ~/.bashrc
+export EVERSTAR_REPO="/path/to/everstar/repo"
+source ~/.zshrc
+```
+
 ## Configuration
 
-### Everstar Repository Path
+### Environment Variables
 
-Default: `/Users/$(whoami)/Desktop/everstar/everstar`
+Copy `.env.example` to `.env` and configure:
 
-To change:
 ```bash
-# Edit scripts/everstar-cli.sh
-EVERSTAR_REPO="/path/to/your/everstar/repo"
+cp .env.example .env
 ```
 
-### Linear API Key
+| Variable | Required | Description | Default |
+|----------|----------|-------------|---------|
+| `LINEAR_API_KEY` | Yes | Linear API key from https://linear.app/settings/api | - |
+| `EVERSTAR_REPO` | No | Path to everstar repository | Auto-detected |
+| `USER_PREFIX` | No | Default branch prefix (e.g., `kevjand`) | Prompts if not set |
 
-Stored in: `~/.claude.json`
-
-To update:
-```bash
-./scripts/setup.sh  # Will prompt for new key
-```
+**Auto-detection paths for EVERSTAR_REPO:**
+- `$HOME/everstar/everstar`
+- `$HOME/Desktop/everstar/everstar`
+- `$HOME/workspace/everstar`
 
 ### Swarm Topology
 
@@ -350,20 +387,19 @@ npx @claude-flow/cli@latest swarm init \
   --strategy specialized
 ```
 
-## Research & Documentation
+## Documentation
 
-- **[SETUP.md](SETUP.md)** - Complete team setup guide with authentication
 - [Ticket Enrichment Research](docs/ticket-enrichment-research.md) - Phase 0 design and scoring framework
-- [Ticket Bot Standards](.claude/ticket-bot-standards.md) - Code quality rules
+- [Recommended Improvements](docs/recommended-improvements.md) - Future enhancements
+- [Ticket Bot Standards](.claude/ticket-bot-standards.md) - Code quality gates
 - [CLAUDE.md](CLAUDE.md) - Project configuration and behavioral rules
-- [Ruflo Documentation](https://github.com/ruvnet/ruflo) - Official Ruflo docs
+- [Claude Flow Docs](https://github.com/ruvnet/claude-flow) - Multi-agent framework
 
 ## Support
 
-- **Setup Help:** See detailed [SETUP.md](SETUP.md) guide
 - **Setup Issues:** Re-run `./scripts/setup.sh` and follow prompts
-- **Automation Issues:** Check `/tmp/ruflo-*.md` output files
-- **Team Questions:** Slack #engineering-tools channel
+- **Automation Issues:** Check `/tmp/ruflo-*.md` output files for agent logs
+- **GitHub Issues:** Report bugs at [everstar-swarms/issues](https://github.com/kevjand/everstar-swarms/issues)
 
 ## Prerequisites
 
@@ -380,8 +416,6 @@ During setup, you'll need:
 - **Everstar Repo:** Clone to local machine
 
 The setup script (`./scripts/setup.sh`) verifies everything and guides you through authentication.
-
-**Detailed instructions:** [SETUP.md](SETUP.md)
 
 ---
 

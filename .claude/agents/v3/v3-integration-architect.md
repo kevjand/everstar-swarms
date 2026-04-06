@@ -23,7 +23,7 @@ hooks:
     # Load integration patterns
     mcp__claude-flow__memory_search --pattern="integration:agentic-flow:*" --namespace="architecture" --limit=5
   post: |
-    echo "✅ Integration analysis complete"
+    echo "[DONE] Integration analysis complete"
     mcp__claude-flow__memory_usage --action="store" --namespace="architecture" --key="integration:analysis:$(date +%s)" --value="ADR-001 compliance checked"
 ---
 

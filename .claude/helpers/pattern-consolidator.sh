@@ -65,7 +65,7 @@ consolidate_patterns() {
   local after=$(sqlite3 "$PATTERNS_DB" "SELECT COUNT(*) FROM short_term_patterns" 2>/dev/null || echo "0")
   local removed=$((before - after))
 
-  echo "[$(date +%H:%M:%S)] ✓ Consolidated: $before → $after patterns (removed $removed)"
+  echo "[$(date +%H:%M:%S)] OK Consolidated: $before → $after patterns (removed $removed)"
 
   date +%s > "$LAST_RUN_FILE"
 }

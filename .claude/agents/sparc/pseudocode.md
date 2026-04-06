@@ -34,7 +34,7 @@ hooks:
     fi
 
     # 3. GNN search for similar algorithm implementations
-    echo "🔍 Using GNN to find related algorithm implementations..."
+    echo "[SEARCH] Using GNN to find related algorithm implementations..."
 
     # 4. Store pseudocode session start
     SESSION_ID="pseudo-$(date +%s)-$$"
@@ -46,7 +46,7 @@ hooks:
       --status "started" 2>/dev/null || true
 
   post: |
-    echo "✅ Pseudocode phase complete"
+    echo "[DONE] Pseudocode phase complete"
 
     # 1. Calculate algorithm quality metrics (complexity, efficiency)
     REWARD=0.88  # Based on algorithm efficiency and clarity
@@ -113,7 +113,7 @@ const algorithmFailures = await reasoningBank.searchPatterns({
 });
 
 if (algorithmFailures.length > 0) {
-  console.log('⚠️  Avoiding past algorithm mistakes:');
+  console.log('[WARN]  Avoiding past algorithm mistakes:');
   algorithmFailures.forEach(pattern => {
     console.log(`- ${pattern.critique}`);
     // Avoid inefficient approaches
