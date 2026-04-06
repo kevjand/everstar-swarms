@@ -500,7 +500,42 @@ ALL AGENTS MUST:
       - Type: tester
       - Name: behavioral-tester
       - Description: Behavioral testing
-      - Prompt: \"CRITICAL - Read LINEAR TICKET at /tmp/linear-ticket-$TICKET_ID.json to understand acceptance criteria. Read $WORKTREE_PATH/CLAUDE.md for testing conventions. Write tests that verify ACCEPTANCE CRITERIA and USER BEHAVIOR (not implementation details). Focus on: Does the feature actually work? Include: integration tests (70%), unit tests (20%), edge cases. TESTING WORKFLOW: (1) Create new test files, (2) Run your new tests: npm test -- path/to/your-new-test-file.test.tsx, (3) Fix your new tests if they fail, (4) FINAL CHECK: Run npm test (NO extra flags - matches CI/CD) to ensure implementation didn't break existing tests, (5) If existing tests fail, report the issue - implementation is broken. Test behavior not structure (GOOD: clicking keeps sidebar expanded. BAD: has icon property). DO NOT create .md documentation files (Test Summary, etc.) - only create test code files (.test.ts, .test.tsx, .spec.ts, test_*.py, etc.). DO NOT modify existing test infrastructure (setup.js, jest.config.js, vitest.config.js, jest.setup.js, etc.) - use existing test setup as-is. DO NOT mark tests as .skip - all new tests must run. Respect existing .skip tests - they are intentional. Only create NEW test files. Working directory: $WORKTREE_PATH\"
+      - Prompt: \"CRITICAL - Read LINEAR TICKET at /tmp/linear-ticket-$TICKET_ID.json to understand acceptance criteria. Read $WORKTREE_PATH/CLAUDE.md for testing conventions.
+
+TESTING STRATEGY (Backend vs Frontend):
+
+1. BACKEND CHANGES (Python/FastAPI):
+   - Write pytest tests with full coverage (integration 70%, unit 20%, edge cases 10%)
+   - Test behavior, not structure: Does the API actually work? Does it return correct data?
+   - Create test files: test_*.py in appropriate test directory
+   - Run your tests: pytest path/to/test_file.py
+   - Fix until tests pass
+   - FINAL CHECK: Run pytest (all tests) to ensure no regressions
+
+2. FRONTEND CHANGES (TypeScript/React):
+   - DO NOT write Jest/Vitest unit tests (frontend test infrastructure incomplete)
+   - Instead, create manual test checklist at /tmp/ruflo-manual-tests-$TICKET_ID.md
+   - Checklist format:
+     ## Manual Test Plan - $TICKET_ID
+
+     ### Setup
+     - [ ] Checkout branch
+     - [ ] Run npm install, npm run dev
+
+     ### Test Cases
+     - [ ] Test 1: [User action] should [expected result]
+     - [ ] Test 2: [Edge case] should [expected result]
+
+     ### Acceptance Criteria Verification
+     - [ ] AC1: [from ticket]
+     - [ ] AC2: [from ticket]
+   - IMPORTANT: Still need to verify no regressions - report if unsure how to test frontend
+
+3. FULL-STACK CHANGES:
+   - Backend: pytest tests (as above)
+   - Frontend: manual test checklist (as above)
+
+DO NOT create .md documentation files EXCEPT the manual test checklist for frontend. DO NOT modify test infrastructure. DO NOT mark tests as .skip. Respect existing .skip tests. Working directory: $WORKTREE_PATH\"
 
    4. Security Scanner
       - Type: security-auditor
@@ -512,7 +547,39 @@ ALL AGENTS MUST:
       - Type: reviewer
       - Name: code-reviewer
       - Description: Code review
-      - Prompt: \"Read LINEAR TICKET at /tmp/linear-ticket-$TICKET_ID.json to understand requirements. Verify $WORKTREE_PATH/CLAUDE.md compliance. Review implementation: Does it actually solve the ticket requirement? Review tests: Do they verify acceptance criteria and user behavior? Check RED FLAGS: tests only check structure not behavior, implementation looks incomplete, acceptance criteria not addressed. Write review to /tmp/ruflo-review-$TICKET_ID.md with PASS or FAIL. Working directory: $WORKTREE_PATH\"
+      - Prompt: \"Read LINEAR TICKET at /tmp/linear-ticket-$TICKET_ID.json to understand requirements. Verify $WORKTREE_PATH/CLAUDE.md compliance.
+
+REVIEW PROCESS:
+
+1. BACKEND CODE REVIEW (if Python files changed):
+   - Does the API actually work? Trace request → handler → response
+   - Are edge cases handled? (null values, invalid input, errors)
+   - Do pytest tests verify the behavior?
+   - Is error handling proper?
+
+2. FRONTEND CODE REVIEW (if TypeScript/React files changed):
+   - CRITICAL: Trace logic flow even without automated tests
+   - Walk through user interactions: What happens when user clicks X?
+   - Check state management: How does state update? Are updates correct?
+   - Verify event handlers: Do they call the right functions with right params?
+   - Check conditional rendering: Do conditionals make sense? Cover all cases?
+   - Verify data flow: Props → Component → Child components (is data passed correctly?)
+   - Look for logic errors: Off-by-one, wrong comparisons, missing null checks
+   - Does manual test checklist at /tmp/ruflo-manual-tests-$TICKET_ID.md cover the implementation?
+
+3. ACCEPTANCE CRITERIA CHECK:
+   - For each AC from ticket, verify implementation addresses it
+   - Backend: AC covered by automated test + code review
+   - Frontend: AC covered by manual checklist + logic trace
+
+RED FLAGS:
+- Tests only check structure, not behavior
+- Implementation looks incomplete
+- Logic errors in frontend code (wrong state updates, broken event handlers)
+- Acceptance criteria not addressed
+- Frontend logic doesn't match manual test checklist
+
+Write review to /tmp/ruflo-review-$TICKET_ID.md with PASS or FAIL. Working directory: $WORKTREE_PATH\"
 
    IMMEDIATELY AFTER SPAWNING ALL 5: Report status
    \"Phase 3 execution started - all 5 implementation agents launched in parallel via Ruflo:
@@ -559,15 +626,29 @@ ALL AGENTS MUST:
    CRITICAL: DO NOT CREATE PR UNLESS TESTS VERIFY ACCEPTANCE CRITERIA
 
    Step 1: Read acceptance criteria from ticket/enrichment - THIS is what needs to work
-   Step 2: Review test files - do they ACTUALLY test ALL acceptance criteria?
-      - LIST every acceptance criterion from the ticket
-      - For EACH criterion, identify which test(s) verify it
-      - Each acceptance criterion MUST have corresponding behavioral test(s)
-      - GOOD: test \"clicking Schematics keeps sidebar expanded\" (directly tests AC)
-      - BAD: test \"schematicsEntry has icon property\" (structural, not AC)
-      - If ANY acceptance criterion is missing test coverage: FAIL and report \"Missing test coverage for AC: [criterion]\"
-      - If tests check structure not behavior: FAIL and report \"Tests do not verify acceptance criteria\"
-      - EVERY AC must be proven by a passing test
+
+   Step 2: Review test coverage - do tests/checklists ACTUALLY cover ALL acceptance criteria?
+
+      A. BACKEND CHANGES (check for pytest tests):
+         - LIST every acceptance criterion from the ticket
+         - For EACH criterion, identify which automated test(s) verify it
+         - Each acceptance criterion MUST have corresponding behavioral test(s)
+         - GOOD: test \"POST /api/users returns 201 with user data\"
+         - BAD: test \"User model has email field\" (structural, not AC)
+         - If ANY AC is missing test coverage: FAIL and report \"Missing test coverage for AC: [criterion]\"
+
+      B. FRONTEND CHANGES (check for manual test checklist):
+         - Look for /tmp/ruflo-manual-tests-$TICKET_ID.md
+         - Verify checklist covers ALL acceptance criteria from ticket
+         - Each AC should have corresponding manual test step
+         - If manual test checklist is missing: FAIL and report \"Frontend changes require manual test checklist\"
+         - If checklist doesn't cover all ACs: FAIL and report \"Manual test checklist incomplete\"
+
+      C. FULL-STACK CHANGES:
+         - Backend: automated pytest tests (as in A)
+         - Frontend: manual test checklist (as in B)
+
+      CRITICAL: EVERY acceptance criterion must be testable (either automated or manual)
    Step 3: Check for NEW skipped tests (DO NOT allow tester to add skipped tests):
       - Check git diff for new test files that were created
       - If new test files contain .skip or test.skip() or describe.skip(): Check if these are NEW
@@ -578,17 +659,22 @@ ALL AGENTS MUST:
       CRITICAL: Implementation changes can break existing tests, so we MUST run all tests EXACTLY as CI/CD does.
 
       - First, identify which test files were CREATED (check git status --short for new files)
-      - Run tests EXACTLY as CI/CD does:
-        Frontend: npm test (no extra flags - uses default jest/vitest config)
-        Backend: pytest (no extra flags - uses default pytest config)
-      - Tests marked .skip or .todo are INTENTIONAL - do NOT try to run them or remove them
-      - If ANY non-skipped test fails (new OR existing): STOP, report failures, investigate what broke, DO NOT create PR
-      - Review new test output specifically: verify new tests cover acceptance criteria
-      - If tests pass but new tests don't verify acceptance criteria: STOP, report issue
 
-      Why run all tests: Code changes can break existing functionality. A passing new test but failing existing test means the implementation is broken.
+      A. BACKEND TESTS (if test_*.py files exist):
+         - Run: pytest (no extra flags - uses default pytest config)
+         - Tests marked skip are INTENTIONAL - do NOT try to run them or remove them
+         - If ANY non-skipped test fails (new OR existing): STOP, report failures, investigate what broke, DO NOT create PR
+         - Verify new backend tests cover acceptance criteria
 
-      IMPORTANT: Use default test commands (npm test, pytest) with NO extra parameters. This matches CI/CD behavior exactly.
+      B. FRONTEND TESTS (SKIP for now - test infrastructure incomplete):
+         - DO NOT run npm test
+         - Frontend changes rely on manual test checklist at /tmp/ruflo-manual-tests-$TICKET_ID.md
+         - NOTE: Frontend changes still need verification but it will be manual
+         - If you're unsure how to verify frontend changes work: report this concern
+
+      Why run all backend tests: Code changes can break existing functionality. A passing new test but failing existing test means the implementation is broken.
+
+      IMPORTANT: Use default test commands (pytest) with NO extra parameters. This matches CI/CD behavior exactly.
    Step 5: Run other quality gates (only after tests pass):
       - Linting: ruff (Python), npm lint (TypeScript)
       - Verify no TODO/FIXME comments
@@ -596,13 +682,17 @@ ALL AGENTS MUST:
    Step 6: Remove unwanted files before commit:
       - Delete any .md documentation files created by agents (Test Summary, IMPLEMENTATION.md, CHANGES.md, etc.)
       - Run: find $WORKTREE_PATH -name \"*Test Summary*.md\" -o -name \"IMPLEMENTATION.md\" -o -name \"CHANGES.md\" | xargs rm -f
-      - ONLY commit: source code, tests, and configuration files
-      - DO NOT commit: documentation, summaries, or markdown files (unless explicitly part of the ticket)
+      - EXCEPTION: Keep /tmp/ruflo-manual-tests-$TICKET_ID.md if it exists (this will be referenced in PR description)
+      - ONLY commit to worktree: source code, tests, and configuration files
+      - DO NOT commit to worktree: documentation, summaries, or markdown files (unless explicitly part of the ticket)
+      - Manual test checklist stays in /tmp for PR description inclusion
    Step 7: ONLY if all tests pass and quality gates pass:
       - Stage all changes: git add -A
       - Create commit: eng-XXXX: [description] with Co-Authored-By: claude-flow
       - Push to remote with upstream tracking: git push -u origin $BRANCH
-      - Create PR: gh pr create --base dev --head $BRANCH
+      - Create PR with manual test checklist if it exists:
+        * If /tmp/ruflo-manual-tests-$TICKET_ID.md exists: gh pr create --base dev --head $BRANCH --body-file /tmp/ruflo-manual-tests-$TICKET_ID.md
+        * Otherwise: gh pr create --base dev --head $BRANCH
       - DISPLAY FINAL SUMMARY to user:
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         AUTOMATION COMPLETE - $TICKET_ID
@@ -633,15 +723,18 @@ ALL AGENTS MUST:
    - CLEAR CHECKPOINT: Mark as fully complete using Bash: source $SCRIPT_DIR/checkpoint.sh && checkpoint_clear
 
    BLOCKING RULES - DO NOT CREATE PR IF:
-   1. ANY tests fail (new tests OR existing tests) - Must run npm test and pytest to verify
-   2. New tests don't verify acceptance criteria (structural tests only)
-   3. Acceptance criteria not covered by tests (missing test coverage)
-   4. Code changes broke existing tests (regression)
+   1. Backend: ANY pytest tests fail (new OR existing) - Must run pytest to verify
+   2. Backend: New tests don't verify acceptance criteria (structural tests only)
+   3. Backend: Acceptance criteria not covered by automated tests
+   4. Frontend: Manual test checklist missing or incomplete (doesn't cover all ACs)
+   5. Code changes broke existing backend tests (regression)
 
    ONLY CREATE PR if:
-   - ALL tests pass (run npm test and pytest, not just new tests)
-   - New tests prove acceptance criteria are met
-   - No regressions in existing functionality
+   - Backend: ALL pytest tests pass (not just new tests)
+   - Backend: New tests prove acceptance criteria are met
+   - Frontend: Manual test checklist covers all acceptance criteria
+   - No regressions in existing backend functionality
+   - NOTE: Frontend unit tests skipped (infrastructure incomplete) - rely on manual checklist
 
 7. Your role as orchestrator using Ruflo MCP:
    - Step 5: Spawn 5 implementation agents in ONE message using mcp__claude-flow__agent_spawn (6 tool calls total: 1 ToolSearch + 5 spawns)
