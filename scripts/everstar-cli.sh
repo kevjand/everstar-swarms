@@ -1,6 +1,6 @@
 #!/bin/bash
 # Everstar CLI - Send prompt directly to Claude CLI
-# Usage: ./everstar-cli.sh ENG-XXXX [USER_PREFIX] [--interactive]
+# Usage: ./everstar-cli.sh ENG-XXXX [USER_PREFIX] [--interactive] [--resume]
 # Requires: claude CLI running or will start it
 
 set -e
@@ -11,8 +11,12 @@ if [ -f "$SCRIPT_DIR/../.env" ]; then
     source "$SCRIPT_DIR/../.env"
 fi
 
+# Load checkpoint functions
+source "$SCRIPT_DIR/checkpoint.sh"
+
 # Parse arguments
 INTERACTIVE_MODE=false
+RESUME_MODE=false
 TICKET_ID=""
 CLI_USER_PREFIX=""  # Store CLI arg separately to not override .env
 
@@ -20,6 +24,10 @@ for arg in "$@"; do
     case $arg in
         --interactive|-i)
             INTERACTIVE_MODE=true
+            shift
+            ;;
+        --resume|-r)
+            RESUME_MODE=true
             shift
             ;;
         *)
@@ -58,15 +66,62 @@ fi
 echo "[DIR] Everstar repo: $EVERSTAR_REPO"
 
 if [ -z "$TICKET_ID" ]; then
-    echo "Usage: ./everstar-cli.sh ENG-XXXX [USER_PREFIX] [--interactive]"
+    echo "Usage: ./everstar-cli.sh ENG-XXXX [USER_PREFIX] [--interactive] [--resume]"
     echo ""
     echo "Examples:"
-    echo "  ./everstar-cli.sh ENG-4214 kevjand              # Full automation"
+    echo "  ./everstar-cli.sh ENG-4214 kevjand              # Full automation (with agent timeouts)"
     echo "  ./everstar-cli.sh ENG-4214 kevjand --interactive # Approval required between phases"
+    echo "  ./everstar-cli.sh ENG-4214 --resume            # Resume from checkpoint"
     echo ""
     echo "Flags:"
     echo "  --interactive, -i    Require approval at the end of each phase (0,1,2,3)"
+    echo "  --resume, -r         Resume from last checkpoint"
+    echo ""
+    echo "Note: All agents have 15-minute timeouts to prevent hanging"
     exit 1
+fi
+
+# Handle resume mode
+if [ "$RESUME_MODE" = true ]; then
+    echo "[RESUME] Loading checkpoint..."
+    CHECKPOINT_DATA=$(checkpoint_load)
+
+    if [ "$CHECKPOINT_DATA" = "{}" ]; then
+        echo "[ERROR] No checkpoint found. Cannot resume."
+        exit 1
+    fi
+
+    # Extract checkpoint data
+    CHECKPOINT_TICKET=$(echo "$CHECKPOINT_DATA" | jq -r '.ticket_id')
+    CHECKPOINT_PHASE=$(echo "$CHECKPOINT_DATA" | jq -r '.phase')
+    CHECKPOINT_STATUS=$(echo "$CHECKPOINT_DATA" | jq -r '.status')
+    CHECKPOINT_WORKTREE=$(echo "$CHECKPOINT_DATA" | jq -r '.worktree')
+    CHECKPOINT_TIME=$(echo "$CHECKPOINT_DATA" | jq -r '.timestamp')
+
+    # Verify ticket matches
+    if [ "$CHECKPOINT_TICKET" != "$TICKET_ID" ]; then
+        echo "[ERROR] Checkpoint is for ticket $CHECKPOINT_TICKET, but you requested $TICKET_ID"
+        exit 1
+    fi
+
+    # Verify worktree exists
+    if [ ! -d "$CHECKPOINT_WORKTREE" ]; then
+        echo "[ERROR] Checkpoint worktree does not exist: $CHECKPOINT_WORKTREE"
+        exit 1
+    fi
+
+    echo "[RESUME] Checkpoint found:"
+    echo "  Ticket: $CHECKPOINT_TICKET"
+    echo "  Phase: $CHECKPOINT_PHASE"
+    echo "  Status: $CHECKPOINT_STATUS"
+    echo "  Worktree: $CHECKPOINT_WORKTREE"
+    echo "  Timestamp: $CHECKPOINT_TIME"
+    echo ""
+    echo "[RESUME] Resuming from Phase $CHECKPOINT_PHASE..."
+
+    # Set variables from checkpoint
+    BRANCH=$(basename "$(dirname "$CHECKPOINT_WORKTREE")")/$(basename "$CHECKPOINT_WORKTREE")
+    WORKTREE_PATH="$CHECKPOINT_WORKTREE"
 fi
 
 echo "> Processing ticket $TICKET_ID via Claude CLI..."
@@ -121,6 +176,7 @@ if [ "$INTERACTIVE_MODE" = true ]; then
 else
     echo "  Mode: AUTONOMOUS (fully automated)"
 fi
+echo "  Agent Timeouts: 15 minutes per agent"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
@@ -175,17 +231,25 @@ ALL AGENTS MUST:
 
 ==== PHASE 0: TICKET ANALYSIS & ENRICHMENT ====
 
-1. Fetch ticket $TICKET_ID details using Linear MCP:
-   - Use linear_search_issues or linear_get_issue
-   - Timeout: 30 seconds max
-   - If Linear MCP hangs, times out, or returns an error: STOP and report failure
-   - Do NOT proceed without valid ticket data from Linear
+1. Fetch ticket $TICKET_ID details using Linear REST API (GraphQL):
+   - Use Bash to call Linear GraphQL API directly (much faster than MCP search):
+     curl -s -X POST https://api.linear.app/graphql \\
+       -H \"Authorization: \$LINEAR_API_KEY\" \\
+       -H \"Content-Type: application/json\" \\
+       -d '{\"query\": \"query { issue(id: \\\"$TICKET_ID\\\") { id title description state { name } priority team { name } assignee { name } labels { nodes { name } } createdAt updatedAt } }\"}'
 
-   CRITICAL: Linear connection is REQUIRED. If unavailable, exit with error message:
-   \"[ERROR] Cannot fetch ticket $TICKET_ID from Linear. Check LINEAR_API_KEY in .env or Linear MCP configuration.\"
+   - Parse the response and extract ticket details
+   - If API returns error or ticket not found: STOP and report \"[ERROR] Cannot fetch ticket $TICKET_ID from Linear. Check ticket ID or LINEAR_API_KEY.\"
+   - Save ticket data to: /tmp/linear-ticket-$TICKET_ID.json for later reference
+   - Timeout: 10 seconds max (should be < 1 second normally)
+
+   CRITICAL: Linear API key is REQUIRED. If \$LINEAR_API_KEY is empty or request fails, exit with error.
 
 2. Spawn ticket-analyzer agent (run_in_background: true):
    Agent(subagent_type: reviewer, run_in_background: true)
+
+   AFTER SPAWNING: Report status
+   \"Ticket analyzer agent spawned - analyzing ticket quality and generating enrichment if needed. This typically takes 30-90 seconds...\"
 
    Ticket-analyzer must analyze ticket quality and conditionally enrich:
 
@@ -198,37 +262,39 @@ ALL AGENTS MUST:
    - Technical Details: 10pts (components, APIs, data models, UI/UX)
 
    CONDITIONAL ENRICHMENT (if score < 70):
-   Generate and append to ticket:
+
+   CRITICAL ENRICHMENT RULES - CONSERVATIVE ONLY:
+   1. DO NOT invent new features or requirements
+   2. ONLY clarify and structure what is ALREADY mentioned in the ticket
+   3. If ticket says \"fix X\", do NOT add \"also implement Y\"
+   4. DO NOT assume requirements based on \"best practices\"
+   5. If information is missing, note it as \"[Not specified in ticket]\" - do NOT make assumptions
+   6. Focus: format existing info into structured acceptance criteria
+
+   Generate ONLY what is missing from ticket (conservative):
 
    ## ENRICHMENT
 
-   ### Generated Acceptance Criteria
-   - AC1: [Given-When-Then format]
-   - AC2: [Edge case handling]
-   - AC3: [Error scenarios]
+   ### Structured Acceptance Criteria (ONLY from ticket content)
+   - AC1: [Reformat ticket requirement into Given-When-Then IF ticket has requirements]
+   - AC2: [Only if explicitly mentioned in ticket]
+   - [If no acceptance criteria in ticket, write: \"No explicit acceptance criteria - defer to ticket description\"]
 
-   ### Identified Edge Cases
-   - Boundary: Empty inputs, max limits, special characters
-   - Errors: Network failures, timeouts, invalid data
-   - Concurrency: Race conditions, simultaneous updates
-   - Performance: Large datasets, slow connections
-   - Compatibility: Browser support, mobile devices
+   ### Edge Cases (ONLY those mentioned or directly implied by ticket)
+   - [List ONLY if ticket mentions error handling, boundaries, or edge cases]
+   - [If not mentioned, write: \"Edge cases not specified in ticket\"]
 
-   ### Test Scenarios Required
-   - Unit Tests (>85% coverage): List specific test cases
-   - Integration Tests: API/DB/service integration points
-   - E2E Tests: Complete user workflow scenarios
+   ### Test Requirements (based on ticket scope ONLY)
+   - [Unit/Integration tests ONLY for components explicitly mentioned in ticket]
+   - [If testing not mentioned, write: \"Test requirements not specified - use standard coverage\"]
 
-   ### Prerequisites & Dependencies
-   - Backend: List required libraries, migrations, env vars
-   - Frontend: List required components, state management, routes
+   ### Prerequisites (ONLY what ticket mentions)
+   - [Backend/Frontend dependencies ONLY if ticket specifies them]
+   - [If not mentioned, write: \"Prerequisites not specified in ticket\"]
 
-   ### Security Checklist
-   - Authentication: Required or not
-   - Authorization: Role-based access control
-   - Input Validation: SQL injection, XSS prevention
-   - Data Exposure: PII handling, sensitive fields
-   - Rate Limiting: API throttling requirements
+   ### Security (ONLY if ticket mentions security concerns)
+   - [Auth/validation ONLY if ticket explicitly requires it]
+   - [If not mentioned, write: \"No security requirements specified in ticket\"]
 
    Analyzer writes to: /tmp/ruflo-ticket-enriched-$TICKET_ID.md (if enrichment needed)
 
@@ -237,10 +303,19 @@ ALL AGENTS MUST:
    - Enrichment status (NEEDED/NOT_NEEDED)
    - File path if enriched, or \"ORIGINAL_TICKET_OK\"
 
+   AFTER PHASE 0 COMPLETES:
+   - Read and DISPLAY enriched ticket to user (if created): Read /tmp/ruflo-ticket-enriched-$TICKET_ID.md
+   - Show score and key changes made
+   - This allows user visibility into what was added
+   - CHECKPOINT: Save state using Bash: source $SCRIPT_DIR/checkpoint.sh && checkpoint_save \"$TICKET_ID\" \"0\" \"complete\" \"$WORKTREE_PATH\"
+
 ==== PHASE 1: PLANNING ====
 
 3. Spawn planner agent (run_in_background: true):
    Agent(subagent_type: planner, run_in_background: true)
+
+   AFTER SPAWNING: Report status
+   \"Planner agent spawned - analyzing requirements and creating implementation plan. This typically takes 2-4 minutes depending on complexity...\"
 
    INPUT: Use enriched ticket if Phase 0 generated one, otherwise use original Linear ticket
 
@@ -263,10 +338,19 @@ ALL AGENTS MUST:
 
    Planner writes plan to: /tmp/ruflo-plan-$TICKET_ID.md
 
+   AFTER PHASE 1 COMPLETES:
+   - Read and DISPLAY plan to user: Read /tmp/ruflo-plan-$TICKET_ID.md
+   - Summarize: complexity, files affected, key decisions, estimated timeline
+   - This allows user visibility into implementation approach
+   - CHECKPOINT: Save state using Bash: source $SCRIPT_DIR/checkpoint.sh && checkpoint_save \"$TICKET_ID\" \"1\" \"complete\" \"$WORKTREE_PATH\"
+
 ==== PHASE 2: AUTOMATED PLAN REVIEW ====
 
 4. Spawn plan-reviewer agent (run_in_background: true):
    Agent(subagent_type: reviewer, run_in_background: true)
+
+   AFTER SPAWNING: Report status
+   \"Plan reviewer agent spawned - validating plan against quality standards. This typically takes 1-2 minutes...\"
 
    Plan-reviewer validates the plan against .claude/ticket-bot-standards.md:
    - OK All requirements from ticket are addressed
@@ -280,32 +364,117 @@ ALL AGENTS MUST:
    If ANY validation fails, plan-reviewer provides specific feedback and requests plan revision.
    Only proceed to Phase 3 if plan-reviewer approves with \"PLAN APPROVED\".
 
+   AFTER PHASE 2 COMPLETES:
+   - Read and DISPLAY plan review results to user: Read /tmp/ruflo-plan-review-$TICKET_ID.md
+   - Show: approval score, criteria passed/failed, any concerns or recommendations
+   - This allows user visibility into quality validation
+   - CHECKPOINT: Save state using Bash: source $SCRIPT_DIR/checkpoint.sh && checkpoint_save \"$TICKET_ID\" \"2\" \"complete\" \"$WORKTREE_PATH\"
+
 ==== PHASE 3: EXECUTION (AFTER AUTOMATED APPROVAL) ====
 
 5. After plan-reviewer approval, spawn 5 implementation agents in ONE message (run_in_background: true):
 
+   AGENT TIMEOUT PROTECTION: Each agent has a 15-minute timeout. If any agent times out, it will be automatically retried once.
+
    ALL AGENTS MUST FIRST: Read $WORKTREE_PATH/CLAUDE.md and follow ALL project-specific rules
 
-   - coder (backend): Read CLAUDE.md first, then implement backend per plan (Python/FastAPI, TDD, full type hints, follow project structure from CLAUDE.md)
-   - coder (frontend): Read CLAUDE.md first, then implement frontend per plan (TypeScript/React, component-based, follow project structure from CLAUDE.md)
-   - tester: Read CLAUDE.md first, then write tests per project testing conventions, >85% coverage, edge cases, integration tests
-   - security-auditor: Vulnerability scan, input validation, no secrets, check against CLAUDE.md security rules
-   - reviewer: Verify CLAUDE.md compliance (project-specific conventions, quality gates from ticket-bot-standards.md)
+   - coder (backend): [TIMEOUT: 15min] Read CLAUDE.md first, then implement backend per plan (Python/FastAPI, TDD, full type hints, follow project structure from CLAUDE.md)
+   - coder (frontend): [TIMEOUT: 15min] Read CLAUDE.md first, then implement frontend per plan (TypeScript/React, component-based, follow project structure from CLAUDE.md)
+   - tester: [TIMEOUT: 15min] CRITICAL - Read LINEAR TICKET first to understand acceptance criteria. Read CLAUDE.md for testing conventions. Write tests that verify ACCEPTANCE CRITERIA and USER BEHAVIOR (not implementation details). Focus on: Does the feature actually work? Include: integration tests (70%), unit tests (20%), edge cases. RUN all tests immediately: npm test -- [test-files]. If tests fail, FIX them. Only complete when all tests PASS. Test behavior not structure (GOOD: clicking keeps sidebar expanded. BAD: has icon property)
+   - security-auditor: [TIMEOUT: 15min] Vulnerability scan, input validation, no secrets, check against CLAUDE.md security rules
+   - reviewer: [TIMEOUT: 15min] Read LINEAR TICKET to understand requirements. Verify CLAUDE.md compliance. Review implementation: Does it actually solve the ticket requirement? Review tests: Do they verify acceptance criteria and user behavior? Check RED FLAGS: tests only check structure not behavior, implementation looks incomplete, acceptance criteria not addressed. Report PASS or FAIL with specific issues to fix
+
+   IMMEDIATELY AFTER SPAWNING ALL 5: Report status
+   \"Phase 3 execution started - all 5 implementation agents launched in parallel:
+   1. Backend coder - Implementing backend changes per plan
+   2. Frontend coder - Implementing frontend changes per plan
+   3. Tester - Writing and running behavioral tests (verify acceptance criteria)
+   4. Security auditor - Security scan and vulnerability check
+   5. Reviewer - Code review and quality gates
+
+   Estimated time: 5-10 minutes for all agents to complete. You'll receive notifications as each finishes...\"
 
 5b. WAIT for ALL 5 agents to complete. You will receive notifications as each finishes. Do NOT proceed until you have confirmation that ALL 5 are done.
+
+   WHILE WAITING - Provide periodic status updates (every 60 seconds):
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   AGENT PROGRESS UPDATE (X minutes elapsed)
+
+   Completed: [list completed agents with brief summary]
+   In Progress: [list remaining agents]
+
+   Current Activity:
+   - Tester: Writing/running tests (typically takes 2-5 min)
+   - Reviewer: Code review in progress
+   - [etc for remaining agents]
+
+   Status: X/5 agents complete, waiting for Y more...
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   This keeps user informed that automation is actively running.
 
 5c. AFTER ALL 5 AGENTS COMPLETE, spawn pr-manager agent (run_in_background: true):
    - pr-manager: Review all agent outputs, run quality gates, commit changes, push to remote, create PR with comprehensive description
 
 6. The pr-manager agent instructions (spawned AFTER the 5 agents complete):
-   - Review all agent outputs for blocking issues
-   - Run quality gates: pytest (quick check), ruff linting, verify no TODO/FIXME
-   - Evaluate security findings (critical vs follow-up)
-   - Stage all changes: git add -A
-   - Create commit: eng-XXXX: [description] with Co-Authored-By: claude-flow
-   - Push to remote: git push origin $BRANCH
-   - Create PR: gh pr create --base dev --head $BRANCH with comprehensive description
-   - Report final status (PR URL, commit hash, files changed)
+
+   CRITICAL: DO NOT CREATE PR UNLESS TESTS VERIFY ACCEPTANCE CRITERIA
+
+   Step 1: Read acceptance criteria from ticket/enrichment - THIS is what needs to work
+   Step 2: Review test files - do they ACTUALLY test the acceptance criteria?
+      - Each acceptance criterion MUST have corresponding behavioral test
+      - GOOD: test \"clicking Schematics keeps sidebar expanded\" (tests AC)
+      - BAD: test \"schematicsEntry has icon property\" (structural, not AC)
+      - If tests check structure not behavior: FAIL and report \"Tests do not verify acceptance criteria\"
+   Step 3: RUN ALL TESTS and ensure they PASS:
+      - Run: npm test -- [new test files]
+      - Run: pytest [new test files] (if backend changes)
+      - If ANY test fails: STOP, report failures, DO NOT create PR
+      - If tests pass but don't verify acceptance criteria: STOP, report issue
+   Step 4: Run other quality gates (only after tests pass):
+      - Linting: ruff (Python), npm lint (TypeScript)
+      - Verify no TODO/FIXME comments
+      - Check security findings (critical vs follow-up)
+   Step 5: ONLY if all tests pass and quality gates pass:
+      - Stage all changes: git add -A
+      - Create commit: eng-XXXX: [description] with Co-Authored-By: claude-flow
+      - Push to remote: git push origin $BRANCH
+      - Create PR: gh pr create --base dev --head $BRANCH
+      - DISPLAY FINAL SUMMARY to user:
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        AUTOMATION COMPLETE - $TICKET_ID
+
+        PR Created: [URL]
+        Commit: [hash]
+        Branch: $BRANCH
+
+        Changes:
+        - Files modified: X
+        - Files created: X
+        - Lines added/removed: +X/-X
+
+        Quality Gates:
+        - Tests: PASSED (X tests, Y% coverage)
+        - Linting: PASSED
+        - Security: PASSED (X findings, severity: ...)
+        - Acceptance Criteria: VERIFIED
+
+        Next Steps:
+        - Review PR at [URL]
+        - Verify feature works as expected
+        - Merge when ready
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   AFTER PR CREATION:
+   - CHECKPOINT: Save state using Bash: source $SCRIPT_DIR/checkpoint.sh && checkpoint_save \"$TICKET_ID\" \"3\" \"complete\" \"$WORKTREE_PATH\"
+   - CLEAR CHECKPOINT: Mark as fully complete using Bash: source $SCRIPT_DIR/checkpoint.sh && checkpoint_clear
+
+   BLOCKING RULES - DO NOT CREATE PR IF:
+   1. Tests fail (any test failures)
+   2. Tests don't verify acceptance criteria (structural tests only)
+   3. Acceptance criteria not covered by tests (missing test coverage)
+
+   ONLY CREATE PR if: Tests pass AND tests prove acceptance criteria are met
 
 7. Your role as orchestrator:
    - Step 5: Spawn 5 implementation agents in ONE message (all with run_in_background: true)
@@ -320,6 +489,19 @@ WORKFLOW PHASES:
 - Phase 1: Planning (uses enriched or original ticket)
 - Phase 2: Automated plan review
 - Phase 3: Execution with quality gates
+
+STATUS REPORTING - Display at start of each phase:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TICKET AUTOMATION STATUS - $TICKET_ID
+
+Phase 0: [DONE/IN PROGRESS/PENDING] Ticket Analysis (score: X/100, enriched: yes/no)
+Phase 1: [DONE/IN PROGRESS/PENDING] Planning (complexity: X, files: X)
+Phase 2: [DONE/IN PROGRESS/PENDING] Plan Review (score: X/100, approved: yes/no)
+Phase 3: [DONE/IN PROGRESS/PENDING] Execution (agents: X/5 complete)
+
+Current Phase: [Name]
+Next Action: [What's happening next]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Remember: $([ "$INTERACTIVE_MODE" = true ] && echo "INTERACTIVE MODE - Ask for approval between phases" || echo "AUTONOMOUS MODE - Execute all phases automatically")"
 
