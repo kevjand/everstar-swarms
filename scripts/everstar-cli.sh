@@ -601,7 +601,7 @@ ALL AGENTS MUST:
    Step 7: ONLY if all tests pass and quality gates pass:
       - Stage all changes: git add -A
       - Create commit: eng-XXXX: [description] with Co-Authored-By: claude-flow
-      - Push to remote: git push origin $BRANCH
+      - Push to remote with upstream tracking: git push -u origin $BRANCH
       - Create PR: gh pr create --base dev --head $BRANCH
       - DISPLAY FINAL SUMMARY to user:
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
