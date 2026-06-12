@@ -247,7 +247,7 @@ tail -f /tmp/everstar-ENG-4214.log
 **Worktree Management:**
 ```bash
 # List all worktrees:
-cd /Users/kevinandrade/Desktop/everstar/everstar
+cd "$EVERSTAR_REPO"
 git worktree list
 
 # Cleanup completed worktree:

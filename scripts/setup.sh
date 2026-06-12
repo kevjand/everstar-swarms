@@ -90,7 +90,22 @@ echo -e "${CYAN}Step 2: Configure Repository Path${NC}"
 echo ""
 
 # Default everstar repo path
-DEFAULT_REPO="/Users/$(whoami)/Desktop/everstar/everstar"
+DEFAULT_REPO=""
+for candidate in \
+    "$HOME/files/everstar" \
+    "$HOME/everstar/everstar" \
+    "$HOME/Desktop/everstar/everstar" \
+    "$HOME/workspace/everstar"; do
+    if [ -d "$candidate/.git" ]; then
+        DEFAULT_REPO="$candidate"
+        break
+    fi
+done
+
+if [ -z "$DEFAULT_REPO" ]; then
+    DEFAULT_REPO="$HOME/files/everstar"
+fi
+
 prompt "Everstar repository path" EVERSTAR_REPO "$DEFAULT_REPO"
 
 # Verify repo exists
@@ -108,11 +123,18 @@ fi
 
 echo -e "${GREEN}OK${NC} Repository found: $EVERSTAR_REPO"
 
-# Update everstar-cli.sh with correct path
+# Persist path in local .env rather than hardcoding it into scripts
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-sed -i.bak "s|EVERSTAR_REPO=\".*\"|EVERSTAR_REPO=\"$EVERSTAR_REPO\"|" "$SCRIPT_DIR/everstar-cli.sh"
-rm -f "$SCRIPT_DIR/everstar-cli.sh.bak"
-echo -e "${GREEN}OK${NC} Updated everstar-cli.sh with repository path"
+ENV_FILE="$SCRIPT_DIR/../.env"
+if [ -f "$ENV_FILE" ]; then
+    tmp_env=$(mktemp)
+    grep -v '^EVERSTAR_REPO=' "$ENV_FILE" > "$tmp_env" || true
+    printf 'EVERSTAR_REPO=%s\n' "$EVERSTAR_REPO" >> "$tmp_env"
+    mv "$tmp_env" "$ENV_FILE"
+else
+    printf 'EVERSTAR_REPO=%s\n' "$EVERSTAR_REPO" > "$ENV_FILE"
+fi
+echo -e "${GREEN}OK${NC} Saved repository path to .env"
 
 echo ""
 echo -e "${CYAN}Step 3: Configure Linear MCP${NC}"

@@ -87,18 +87,25 @@ fi
 # Auto-detect everstar repo location (works for any team member)
 if [ -z "$EVERSTAR_REPO" ]; then
     # Try common locations
-    if [ -d "$HOME/everstar/everstar" ]; then
-        EVERSTAR_REPO="/Users/kevinandrade/Desktop/everstar/everstar"
-    elif [ -d "$HOME/Desktop/everstar/everstar" ]; then
-        EVERSTAR_REPO="/Users/kevinandrade/Desktop/everstar/everstar"
-    elif [ -d "$HOME/workspace/everstar" ]; then
-        EVERSTAR_REPO="/Users/kevinandrade/Desktop/everstar/everstar"
-    else
+    for candidate in \
+        "$HOME/files/everstar" \
+        "$HOME/everstar/everstar" \
+        "$HOME/Desktop/everstar/everstar" \
+        "$HOME/workspace/everstar"; do
+        if [ -d "$candidate/.git" ]; then
+            EVERSTAR_REPO="$candidate"
+            break
+        fi
+    done
+
+    if [ -z "$EVERSTAR_REPO" ]; then
         echo "[ERROR] Cannot find everstar repo. Set EVERSTAR_REPO env variable in .env:"
         echo "   echo 'EVERSTAR_REPO=/path/to/everstar' >> .env"
         exit 1
     fi
 fi
+
+TICKET_BOT_STANDARDS="$SCRIPT_DIR/../.claude/ticket-bot-standards.md"
 
 echo "[DIR] Everstar repo: $EVERSTAR_REPO"
 
@@ -223,6 +230,7 @@ echo ""
 
 # Create execution mode instructions
 EXECUTION_MODE_INSTRUCTIONS=""
+ORCHESTRATION_INSTRUCTIONS=""
 if [ "$EXECUTION_MODE" = "swarm" ]; then
     EXECUTION_MODE_INSTRUCTIONS="
 EXECUTION MODE: RUFLO SWARM (Advanced)
@@ -241,6 +249,15 @@ mcp__claude-flow__agent_spawn(
     prompt: \"detailed instructions\"
 )
 "
+    ORCHESTRATION_INSTRUCTIONS="
+7. Your role as orchestrator using Ruflo MCP:
+   - Step 5: Spawn 5 implementation agents in ONE message using mcp__claude-flow__agent_spawn (6 tool calls total: 1 ToolSearch + 5 spawns)
+   - Step 5b: Use mcp__claude-flow__swarm_status to check agent completion status
+   - Step 5c: After all 5 finish, spawn pr-manager agent (2 tool calls: 1 ToolSearch + 1 spawn)
+   - Do NOT manually run quality gates, commits, or create PRs - let pr-manager handle everything
+
+   IMPORTANT: All agent spawns go through Ruflo MCP, not Claude Code's Agent tool. This enables proper swarm coordination.
+"
 else
     EXECUTION_MODE_INSTRUCTIONS="
 EXECUTION MODE: SIMPLE (Recommended - Working Now)
@@ -249,7 +266,7 @@ Use Claude Code's native Agent tool for sequential coordination:
 1. Spawn agents using Agent() tool directly
 2. Agents coordinate via shared filesystem and git worktree
 3. Sequential phase execution with file-based handoffs
-4. Proven reliable, fast, and simple
+4. Do not use Ruflo MCP, ToolSearch, mcp__claude-flow__agent_spawn, or swarm status tools in simple mode
 
 Agent spawning syntax:
 Agent(
@@ -258,6 +275,15 @@ Agent(
     prompt: \"detailed instructions\",
     run_in_background: true
 )
+"
+    ORCHESTRATION_INSTRUCTIONS="
+7. Your role as orchestrator using Claude Code native agents:
+   - Step 5: Spawn 5 implementation agents in ONE message using the Agent tool with run_in_background: true
+   - Step 5b: Wait for the native Agent results to return; do not use Ruflo MCP or swarm status tools
+   - Step 5c: After all 5 finish, spawn pr-manager with the Agent tool
+   - Do NOT manually run quality gates, commits, or create PRs - let pr-manager handle everything
+
+   IMPORTANT: In simple mode, all agent spawns go through Claude Code's native Agent tool. Do not use ToolSearch or mcp__claude-flow__agent_spawn.
 "
 fi
 
@@ -301,14 +327,36 @@ CRITICAL: You are working in a git worktree at $WORKTREE_PATH (isolated from mai
 
 CRITICAL PROJECT GUIDELINES:
 1. FIRST ACTION: Read $WORKTREE_PATH/CLAUDE.md - This contains MANDATORY project-specific rules you MUST follow
-2. Read /Users/kevinandrade/Desktop/everstar-swarms/.claude/ticket-bot-standards.md - General quality requirements
+2. Read $TICKET_BOT_STANDARDS - General quality requirements
 3. If CLAUDE.md conflicts with ticket-bot-standards.md, CLAUDE.md takes precedence (project-specific overrides general)
+
+EVERSTAR LOCAL DEVELOPMENT ENVIRONMENT:
+- First-time full-stack setup: from $WORKTREE_PATH run \`make stack-setup\`.
+- Subsequent full-stack starts: from $WORKTREE_PATH run \`make stack-up\`.
+- Native frontend development, recommended on macOS: from $WORKTREE_PATH run \`docker compose -f infrastructure/stack/docker-compose.local-dev.yml stop frontend\`, then \`cd src/apps/gordian && make dev-local\`.
+- Required local env files: $WORKTREE_PATH/api/.env and $WORKTREE_PATH/src/apps/gordian/.env.local. If they are missing, STOP and tell the user to get them from 1Password rather than inventing values.
+- Local service URLs after stack startup: frontend http://localhost:3000, API http://localhost:8080, API docs http://localhost:8080/scalar, Logto http://localhost:3301, Airflow http://localhost:8081.
+- Local app login from the Everstar stack: mstar / mpass.
+- After \`make stack-up\`, wait for readiness before running Playwright or full-stack tests:
+  \`curl -sf http://localhost:8080/health\` must pass for the API.
+  \`curl -sf http://localhost:3301\` must pass for Logto.
+  \`curl -sf http://localhost:3000\` must pass for the frontend, whether Docker-hosted or native.
+- Use a bounded wait loop, not infinite polling. Example: \`for i in {1..60}; do curl -sf http://localhost:8080/health >/dev/null && curl -sf http://localhost:3301 >/dev/null && curl -sf http://localhost:3000 >/dev/null && break; sleep 2; done\`.
+- If readiness checks fail, run \`make stack-status\` and report which service is not ready instead of continuing blindly.
+
+FRONTEND PLAYWRIGHT TESTING:
+- Gordian Playwright config is at $WORKTREE_PATH/src/apps/gordian/playwright.config.ts and defaults to PLAYWRIGHT_BASE_URL=http://localhost:3000.
+- Install browser dependencies when needed: \`cd src/apps/gordian && pnpm install && pnpm exec playwright install --with-deps chromium\`.
+- Run the frontend E2E suite: \`cd src/apps/gordian && PLAYWRIGHT_BASE_URL=http://localhost:3000 pnpm test\`.
+- Run headed/UI mode for debugging: \`cd src/apps/gordian && PLAYWRIGHT_BASE_URL=http://localhost:3000 pnpm test-ui\`.
+- For frontend tickets, prefer adding or updating Playwright tests under $WORKTREE_PATH/src/apps/gordian/__tests__ when a stable automated browser check is possible. If automation is not practical, create the manual checklist and explain why Playwright coverage was not added.
 
 ALL AGENTS MUST:
 - Read and strictly follow $WORKTREE_PATH/CLAUDE.md before any code changes
 - Follow file organization rules from CLAUDE.md
 - Obey project-specific conventions (naming, structure, testing) from CLAUDE.md
 - Apply ticket-bot-standards.md for quality gates not covered by CLAUDE.md
+- Use the Everstar local stack and Playwright commands above for local/full-stack/frontend validation
 
 ==== PHASE 0: TICKET ANALYSIS & ENRICHMENT ====
 
@@ -327,8 +375,7 @@ ALL AGENTS MUST:
    CRITICAL: Linear API key is REQUIRED. If \$LINEAR_API_KEY is empty or request fails, exit with error.
 
 2. Spawn ticket-analyzer agent using syntax from EXECUTION MODE above:
-   - For simple mode: Use Agent() tool
-   - For swarm mode: Use ToolSearch + mcp__claude-flow__agent_spawn
+   - Use the agent spawning syntax from EXECUTION MODE above
 
    Agent configuration:
    - Type: reviewer
@@ -400,8 +447,7 @@ ALL AGENTS MUST:
 ==== PHASE 1: PLANNING ====
 
 3. Spawn planner agent using syntax from EXECUTION MODE above:
-   - For simple mode: Use Agent() tool
-   - For swarm mode: Use ToolSearch + mcp__claude-flow__agent_spawn
+   - Use the agent spawning syntax from EXECUTION MODE above
 
    Agent configuration:
    - Type: planner
@@ -442,8 +488,7 @@ ALL AGENTS MUST:
 ==== PHASE 2: AUTOMATED PLAN REVIEW ====
 
 4. Spawn plan-reviewer agent using syntax from EXECUTION MODE above:
-   - For simple mode: Use Agent() tool
-   - For swarm mode: Use ToolSearch + mcp__claude-flow__agent_spawn
+   - Use the agent spawning syntax from EXECUTION MODE above
 
    Agent configuration:
    - Type: reviewer
@@ -478,9 +523,7 @@ ALL AGENTS MUST:
 
    AGENT TIMEOUT PROTECTION: Each agent has a 15-minute timeout.
 
-   Spawn ALL 5 agents in ONE message using syntax from EXECUTION MODE above:
-   - For simple mode: Use Agent() tool with run_in_background: true
-   - For swarm mode: Use ToolSearch + mcp__claude-flow__agent_spawn (for true parallel execution)
+   Spawn ALL 5 agents in ONE message using the syntax from EXECUTION MODE above.
 
    Agent configurations for Phase 3:
 
@@ -513,14 +556,28 @@ TESTING STRATEGY (Backend vs Frontend):
    - FINAL CHECK: Run pytest (all tests) to ensure no regressions
 
 2. FRONTEND CHANGES (TypeScript/React):
-   - DO NOT write Jest/Vitest unit tests (frontend test infrastructure incomplete)
-   - Instead, create manual test checklist at /tmp/ruflo-manual-tests-$TICKET_ID.md
+   - Prefer Playwright E2E coverage for user-visible behavior when a stable browser assertion is possible.
+   - Playwright tests live under src/apps/gordian/__tests__ and run with: cd src/apps/gordian && PLAYWRIGHT_BASE_URL=http://localhost:3000 pnpm test
+   - Install browsers when needed: cd src/apps/gordian && pnpm install && pnpm exec playwright install --with-deps chromium
+   - For local/full-stack validation, use the Everstar stack: from $WORKTREE_PATH run make stack-up, wait for API/Logto/frontend readiness with curl checks, then run the native frontend if needed with cd src/apps/gordian && make dev-local.
+   - If src/apps/gordian/.env.local or api/.env is missing, STOP and report that local env files must be pulled from 1Password; do not invent env values.
+   - If Playwright coverage is not practical for the ticket, create manual test checklist at /tmp/ruflo-manual-tests-$TICKET_ID.md and explain why automated browser coverage was not added.
    - Checklist format:
      ## Manual Test Plan - $TICKET_ID
 
      ### Setup
      - [ ] Checkout branch
-     - [ ] Run npm install, npm run dev
+     - [ ] Ensure api/.env and src/apps/gordian/.env.local are present from 1Password
+     - [ ] From repo root, run make stack-up
+     - [ ] Wait for readiness: curl -sf http://localhost:8080/health, curl -sf http://localhost:3301, and curl -sf http://localhost:3000
+     - [ ] If running the frontend natively, stop the Docker frontend: docker compose -f infrastructure/stack/docker-compose.local-dev.yml stop frontend
+     - [ ] Run cd src/apps/gordian && make dev-local
+     - [ ] Re-check frontend readiness: curl -sf http://localhost:3000
+     - [ ] Open http://localhost:3000 and log in with mstar / mpass
+
+     ### Playwright Verification
+     - [ ] Run cd src/apps/gordian && PLAYWRIGHT_BASE_URL=http://localhost:3000 pnpm test
+     - [ ] If debugging interactively, run cd src/apps/gordian && PLAYWRIGHT_BASE_URL=http://localhost:3000 pnpm test-ui
 
      ### Test Cases
      - [ ] Test 1: [User action] should [expected result]
@@ -533,9 +590,10 @@ TESTING STRATEGY (Backend vs Frontend):
 
 3. FULL-STACK CHANGES:
    - Backend: pytest tests (as above)
-   - Frontend: manual test checklist (as above)
+   - Frontend: Playwright E2E tests when stable, plus manual checklist when human verification is required
+   - Local stack: run make stack-up from $WORKTREE_PATH; for active frontend development run cd src/apps/gordian && make dev-local
 
-DO NOT create .md documentation files EXCEPT the manual test checklist for frontend. DO NOT modify test infrastructure. DO NOT mark tests as .skip. Respect existing .skip tests. Working directory: $WORKTREE_PATH\"
+DO NOT create .md documentation files EXCEPT the manual test checklist for frontend. DO NOT modify test infrastructure except adding/updating relevant Playwright tests for this ticket. DO NOT mark tests as .skip. Respect existing .skip tests. Working directory: $WORKTREE_PATH\"
 
    4. Security Scanner
       - Type: security-auditor
@@ -611,8 +669,7 @@ Write review to /tmp/ruflo-review-$TICKET_ID.md with PASS or FAIL. Working direc
    This keeps user informed that automation is actively running.
 
 5c. AFTER ALL 5 AGENTS COMPLETE, spawn pr-manager agent using syntax from EXECUTION MODE above:
-   - For simple mode: Use Agent() tool
-   - For swarm mode: Use ToolSearch + mcp__claude-flow__agent_spawn
+   - Use the agent spawning syntax from EXECUTION MODE above
 
    Agent configuration:
    - Type: reviewer
@@ -666,19 +723,25 @@ Write review to /tmp/ruflo-review-$TICKET_ID.md with PASS or FAIL. Working direc
          - If ANY non-skipped test fails (new OR existing): STOP, report failures, investigate what broke, DO NOT create PR
          - Verify new backend tests cover acceptance criteria
 
-      B. FRONTEND TESTS (SKIP for now - test infrastructure incomplete):
-         - DO NOT run npm test
-         - Frontend changes rely on manual test checklist at /tmp/ruflo-manual-tests-$TICKET_ID.md
-         - NOTE: Frontend changes still need verification but it will be manual
-         - If you're unsure how to verify frontend changes work: report this concern
+      B. FRONTEND TESTS (Playwright):
+         - If frontend files under src/apps/gordian changed, run Playwright whenever local env is available:
+           1. From $WORKTREE_PATH, verify api/.env and src/apps/gordian/.env.local exist; if missing, STOP and report that the user must pull env files from 1Password.
+           2. From $WORKTREE_PATH, run make stack-up to start local services.
+           3. Wait for readiness before testing: curl -sf http://localhost:8080/health, curl -sf http://localhost:3301, and curl -sf http://localhost:3000 must pass. If they do not pass after a bounded wait, run make stack-status and STOP with the failing service names.
+           4. If the Docker frontend is unsuitable for active testing, run docker compose -f infrastructure/stack/docker-compose.local-dev.yml stop frontend, then cd src/apps/gordian && make dev-local, then wait for curl -sf http://localhost:3000.
+           5. Run cd src/apps/gordian && PLAYWRIGHT_BASE_URL=http://localhost:3000 pnpm test.
+         - If Playwright fails, STOP, report the failures, and do not create PR until fixed or explicitly accepted by the user.
+         - If Playwright cannot be run because local env is unavailable, require /tmp/ruflo-manual-tests-$TICKET_ID.md and clearly report that frontend E2E was not run.
+         - Frontend manual checklist is still required for human acceptance when the ticket needs visual or exploratory verification.
 
       Why run all backend tests: Code changes can break existing functionality. A passing new test but failing existing test means the implementation is broken.
 
-      IMPORTANT: Use default test commands (pytest) with NO extra parameters. This matches CI/CD behavior exactly.
+      IMPORTANT: Use default backend test commands (pytest) with NO extra parameters. Use Gordian's Playwright script (pnpm test) for frontend E2E.
    Step 5: Run other quality gates (only after tests pass):
       - Linting: ruff (Python), npm lint (TypeScript)
       - Verify no TODO/FIXME comments
       - Check security findings (critical vs follow-up)
+      - For frontend/UI changes, capture at least one screenshot when practical after local stack readiness passes. Use Playwright or a minimal ad hoc Playwright script against http://localhost:3000, save screenshots to /tmp/ruflo-screenshot-$TICKET_ID-*.png, and reference the paths in the PR body. Do not commit screenshots unless explicitly requested.
    Step 6: Remove unwanted files before commit:
       - Delete any .md documentation files created by agents (Test Summary, IMPLEMENTATION.md, CHANGES.md, etc.)
       - Run: find $WORKTREE_PATH -name \"*Test Summary*.md\" -o -name \"IMPLEMENTATION.md\" -o -name \"CHANGES.md\" | xargs rm -f
@@ -690,9 +753,19 @@ Write review to /tmp/ruflo-review-$TICKET_ID.md with PASS or FAIL. Working direc
       - Stage all changes: git add -A
       - Create commit: eng-XXXX: [description] with Co-Authored-By: claude-flow
       - Push to remote with upstream tracking: git push -u origin $BRANCH
-      - Create PR with manual test checklist if it exists:
-        * If /tmp/ruflo-manual-tests-$TICKET_ID.md exists: gh pr create --base dev --head $BRANCH --body-file /tmp/ruflo-manual-tests-$TICKET_ID.md
-        * Otherwise: gh pr create --base dev --head $BRANCH
+      - Create a rich PR body at /tmp/ruflo-pr-body-$TICKET_ID.md before calling gh pr create. Include:
+        * Ticket link or ticket ID and title
+        * Summary of user-facing changes
+        * Implementation notes with key files changed
+        * Acceptance criteria checklist with verification method for each item
+        * Testing section with exact commands run and pass/fail status
+        * Backend results: pytest/mypy/ruff output summary when applicable
+        * Frontend results: Playwright command, pass/fail status, report path (src/apps/gordian/playwright-report/index.html), and whether PLAYWRIGHT_BASE_URL was http://localhost:3000
+        * Screenshots section for frontend/UI changes. Capture screenshots with Playwright when practical and store them outside committed source, e.g. /tmp/ruflo-screenshot-$TICKET_ID-before.png and /tmp/ruflo-screenshot-$TICKET_ID-after.png. Reference these paths in the PR body and state if screenshots were not applicable.
+        * Manual verification checklist from /tmp/ruflo-manual-tests-$TICKET_ID.md if it exists
+        * Known limitations, skipped checks, or env constraints. Be explicit if Playwright could not run because api/.env or src/apps/gordian/.env.local was unavailable.
+        * Follow-up work, if any
+      - Create PR using the generated PR body: gh pr create --base dev --head $BRANCH --body-file /tmp/ruflo-pr-body-$TICKET_ID.md
       - DISPLAY FINAL SUMMARY to user:
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         AUTOMATION COMPLETE - $TICKET_ID
@@ -732,18 +805,12 @@ Write review to /tmp/ruflo-review-$TICKET_ID.md with PASS or FAIL. Working direc
    ONLY CREATE PR if:
    - Backend: ALL pytest tests pass (not just new tests)
    - Backend: New tests prove acceptance criteria are met
-   - Frontend: Manual test checklist covers all acceptance criteria
+   - Frontend: Playwright passes for automated browser coverage when local env is available and frontend behavior changed
+   - Frontend: Manual test checklist covers all acceptance criteria that still require human verification
    - No regressions in existing backend functionality
-   - NOTE: Frontend unit tests skipped (infrastructure incomplete) - rely on manual checklist
+   - NOTE: If Playwright cannot run because local env files are unavailable, report that limitation clearly and require the manual checklist
 
-7. Your role as orchestrator using Ruflo MCP:
-   - Step 5: Spawn 5 implementation agents in ONE message using mcp__claude-flow__agent_spawn (6 tool calls total: 1 ToolSearch + 5 spawns)
-   - Step 5b: Use mcp__claude-flow__swarm_status to check agent completion status
-   - Step 5c: After all 5 finish, spawn pr-manager agent (2 tool calls: 1 ToolSearch + 1 spawn)
-   - Do NOT manually run quality gates, commits, or create PRs - let pr-manager handle everything
-
-   IMPORTANT: All agent spawns go through Ruflo MCP, not Claude Code's Agent tool. This enables proper swarm coordination.
-
+$ORCHESTRATION_INSTRUCTIONS
 FORBIDDEN: Do NOT create ANY markdown documentation files (IMPLEMENTATION.md, CHANGES.md, Test Summary.md, etc.). The code, tests, and commit messages are the documentation. Only commit source code, tests, and configuration files.
 
 WORKFLOW PHASES:

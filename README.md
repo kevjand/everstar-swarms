@@ -414,7 +414,7 @@ If you're trying to use `--swarm` mode and encountering issues:
 ./scripts/everstar-cli.sh ENG-XXXX --simple
 
 # Option 2: Check swarm status
-cd /Users/kevinandrade/Desktop/everstar/everstar
+cd "$EVERSTAR_REPO"
 npx @claude-flow/cli@latest swarm status
 
 # Option 3: Reset swarm and try again
